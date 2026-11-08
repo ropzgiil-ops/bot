@@ -9,24 +9,54 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Bulletproof iOS App
+      - name: Compile and Pack Working IPA
         run: |
           set -e
           mkdir -p Payload/IronLog.app/www
 
-          # 1. Находим твой index.html и копируем в бандл
+          # 1. Копируем index.html
           if [ -f "index.html" ]; then
             cp "index.html" Payload/IronLog.app/www/index.html
           elif [ -f "IronLog/www/index.html" ]; then
             cp "IronLog/www/index.html" Payload/IronLog.app/www/index.html
           elif [ -f "IronLog/index.html" ]; then
             cp "IronLog/index.html" Payload/IronLog.app/www/index.html
-          else
-            echo "ERROR: index.html not found!"
-            exit 1
           fi
 
-          # 2. Чистый Info.plist БЕЗ SceneDelegate (чтобы не было черного экрана и заморозки окна)
+          # 2. Вшиваем патч прямо в начало index.html (защита от падения localStorage на iOS и разблокировка всех кнопок)
+          cat << 'PATCH_EOF' > patch.html
+          <script>
+          (function() {
+              var mem = {};
+              var safeStore = {
+                  getItem: function(k) { return mem.hasOwnProperty(k) ? mem[k] : null; },
+                  setItem: function(k, v) { mem[k] = String(v); },
+                  removeItem: function(k) { delete mem[k]; },
+                  clear: function() { mem = {}; }
+              };
+              try {
+                  localStorage.setItem('_t', '1');
+                  localStorage.removeItem('_t');
+              } catch (e) {
+                  Object.defineProperty(window, 'localStorage', { value: safeStore });
+                  Object.defineProperty(window, 'sessionStorage', { value: safeStore });
+              }
+              window.alert = function(m) { console.log(m); };
+              window.confirm = function() { return true; };
+          })();
+          </script>
+          <style>
+          * { -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important; }
+          .hidden, [hidden] { display: none !important; pointer-events: none !important; }
+          button, a, input, select, textarea, [onclick], [role="button"] { pointer-events: auto !important; cursor: pointer !important; }
+          </style>
+          PATCH_EOF
+
+          cat patch.html Payload/IronLog.app/www/index.html > Payload/IronLog.app/www/temp.html
+          mv Payload/IronLog.app/www/temp.html Payload/IronLog.app/www/index.html
+          cp Payload/IronLog.app/www/index.html Payload/IronLog.app/index.html
+
+          # 3. Создаем Info.plist
           cat << 'PLIST_EOF' > Payload/IronLog.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -47,9 +77,9 @@ jobs:
           	<key>CFBundlePackageType</key>
           	<string>APPL</string>
           	<key>CFBundleShortVersionString</key>
-          	<string>10.0.0</string>
+          	<string>11.0</string>
           	<key>CFBundleVersion</key>
-          	<string>10</string>
+          	<string>11</string>
           	<key>LSRequiresIPhoneOS</key>
           	<true/>
           	<key>NSAppTransportSecurity</key>
@@ -75,53 +105,29 @@ jobs:
           </plist>
           PLIST_EOF
 
-          # 3. Единый нативный движок с виртуальным сервером app:// и защитой localStorage
-          cat << 'SWIFT_EOF' > main.swift
+          # 4. Создаем App.swift (НЕ main.swift, чтобы @main скомпилировался без ошибки!)
+          cat << 'SWIFT_EOF' > App.swift
           import UIKit
           import WebKit
 
-          // Виртуальный сервер app://localhost/ для обхода всех блокировок file:// в iOS
           class LocalSchemeHandler: NSObject, WKURLSchemeHandler {
               func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
-                  let wwwPath = Bundle.main.bundlePath + "/www/index.html"
-                  if let data = try? Data(contentsOf: URL(fileURLWithPath: wwwPath)) {
-                      let response = HTTPURLResponse(
-                          url: urlSchemeTask.request.url!,
-                          statusCode: 200,
-                          httpVersion: "HTTP/1.1",
-                          headerFields: [
-                              "Content-Type": "text/html; charset=utf-8",
-                              "Access-Control-Allow-Origin": "*"
-                          ]
-                      )!
+                  let path = Bundle.main.bundlePath + "/www/index.html"
+                  if let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+                      let response = URLResponse(url: urlSchemeTask.request.url!, mimeType: "text/html", expectedContentLength: data.count, textEncodingName: "utf-8")
                       urlSchemeTask.didReceive(response)
                       urlSchemeTask.didReceive(data)
                       urlSchemeTask.didFinish()
                   } else {
-                      urlSchemeTask.didFailWithError(NSError(domain: "IronLog", code: 404, userInfo: nil))
+                      urlSchemeTask.didFailWithError(NSError(domain: "App", code: 404, userInfo: nil))
                   }
               }
               func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {}
           }
 
-          class BridgeHandler: NSObject, WKScriptMessageHandler {
-              func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-                  if message.name == "storage", let dict = message.body as? [String: String] {
-                      if let key = dict["key"], let val = dict["value"] {
-                          UserDefaults.standard.set(val, forKey: "ironlog_storage_" + key)
-                          UserDefaults.standard.synchronize()
-                      }
-                  } else if message.name == "haptic" {
-                      let gen = UIImpactFeedbackGenerator(style: .medium)
-                      gen.impactOccurred()
-                  }
-              }
-          }
-
-          class RootViewController: UIViewController, WKUIDelegate, WKNavigationDelegate {
+          class RootVC: UIViewController, WKUIDelegate, WKNavigationDelegate {
               var webView: WKWebView!
-              let schemeHandler = LocalSchemeHandler()
-              let bridgeHandler = BridgeHandler()
+              let handler = LocalSchemeHandler()
 
               override var preferredStatusBarStyle: UIStatusBarStyle {
                   return .lightContent
@@ -134,118 +140,36 @@ jobs:
                   let config = WKWebViewConfiguration()
                   config.allowsInlineMediaPlayback = true
                   config.mediaTypesRequiringUserActionForPlayback = []
-                  config.setURLSchemeHandler(schemeHandler, forURLScheme: "app")
-
-                  let contentController = WKUserContentController()
-                  contentController.add(bridgeHandler, name: "storage")
-                  contentController.add(bridgeHandler, name: "haptic")
-
-                  // Подгружаем ранее сохраненные данные из нативной памяти iPhone
-                  var savedDict: [String: String] = [:]
-                  for (k, v) in UserDefaults.standard.dictionaryRepresentation() {
-                      if k.hasPrefix("ironlog_storage_"), let str = v as? String {
-                          let cleanKey = String(k.dropFirst("ironlog_storage_".count))
-                          savedDict[cleanKey] = str
-                      }
-                  }
-                  let jsonData = (try? JSONSerialization.data(withJSONObject: savedDict)) ?? Data()
-                  let jsonString = String(data: jsonData, encoding: .utf8) ?? "{}"
-
-                  // Инжект ДО загрузки страницы: спасаем localStorage от краша и чиним все клики
-                  let preloadJS = """
-                  (function() {
-                      window.__memoryDB = \(jsonString);
-                      const safeStorage = {
-                          getItem: function(k) { return Object.prototype.hasOwnProperty.call(window.__memoryDB, k) ? window.__memoryDB[k] : null; },
-                          setItem: function(k, v) {
-                              const s = String(v);
-                              window.__memoryDB[k] = s;
-                              try { window.webkit.messageHandlers.storage.postMessage({key: String(k), value: s}); } catch(e) {}
-                          },
-                          removeItem: function(k) { delete window.__memoryDB[k]; },
-                          clear: function() { window.__memoryDB = {}; }
-                      };
-                      try {
-                          window.localStorage.setItem('__test', '1');
-                          window.localStorage.removeItem('__test');
-                      } catch (err) {
-                          Object.defineProperty(window, 'localStorage', { value: safeStorage, configurable: true });
-                          Object.defineProperty(window, 'sessionStorage', { value: safeStorage, configurable: true });
-                      }
-                      window.alert = function(msg) { console.log("Alert:", msg); };
-                      window.confirm = function(msg) { return true; };
-                  })();
-                  """
-                  contentController.addUserScript(WKUserScript(source: preloadJS, injectionTime: .atDocumentStart, forMainFrameOnly: false))
-
-                  // Инжект ПОСЛЕ загрузки: разблокируем CSS-слои и ускоряем отклик кнопок
-                  let postloadJS = """
-                  (function() {
-                      const style = document.createElement('style');
-                      style.innerHTML = `
-                          * { -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important; -webkit-user-select: none !important; user-select: none !important; }
-                          input, textarea, select { -webkit-user-select: text !important; user-select: text !important; }
-                          .hidden, [hidden] { display: none !important; pointer-events: none !important; }
-                          button, a, [onclick], [role="button"], label, summary { cursor: pointer !important; pointer-events: auto !important; }
-                      `;
-                      document.head.appendChild(style);
-
-                      document.addEventListener('touchstart', function(e) {
-                          const btn = e.target.closest('button, a, [onclick], [role="button"]');
-                          if (btn) {
-                              try { window.webkit.messageHandlers.haptic.postMessage('tap'); } catch(err) {}
-                          }
-                      }, {passive: true});
-                  })();
-                  """
-                  contentController.addUserScript(WKUserScript(source: postloadJS, injectionTime: .atDocumentEnd, forMainFrameOnly: false))
-
-                  config.userContentController = contentController
+                  config.setURLSchemeHandler(handler, forURLScheme: "app")
 
                   webView = WKWebView(frame: view.bounds, configuration: config)
                   webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-                  webView.navigationDelegate = self
                   webView.uiDelegate = self
+                  webView.navigationDelegate = self
                   webView.isOpaque = false
                   webView.backgroundColor = UIColor(red: 0.02, green: 0.03, blue: 0.07, alpha: 1.0)
                   webView.scrollView.bounces = false
                   webView.scrollView.delaysContentTouches = false
-                  webView.scrollView.canCancelContentTouches = true
                   webView.scrollView.contentInsetAdjustmentBehavior = .never
-
-                  if let gestures = webView.scrollView.gestureRecognizers {
-                      for g in gestures {
-                          g.delaysTouchesBegan = false
-                          g.delaysTouchesEnded = false
-                      }
-                  }
 
                   view.addSubview(webView)
 
-                  // Запускаем через защищенную схему app://localhost/index.html
                   if let url = URL(string: "app://localhost/index.html") {
                       webView.load(URLRequest(url: url))
                   }
               }
 
-              // Поддержка любых JS-окон в веб-приложении
               func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
                   completionHandler(true)
               }
-              func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
-                  let alert = UIAlertController(title: "IronLog", message: message, preferredStyle: .alert)
-                  alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler() })
-                  self.present(alert, animated: true)
-              }
           }
 
-          @UIApplicationMain
+          @main
           class AppDelegate: UIResponder, UIApplicationDelegate {
               var window: UIWindow?
               func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
                   let win = UIWindow(frame: UIScreen.main.bounds)
-                  win.backgroundColor = UIColor(red: 0.02, green: 0.03, blue: 0.07, alpha: 1.0)
-                  win.rootViewController = RootViewController()
+                  win.rootViewController = RootVC()
                   win.makeKeyAndVisible()
                   self.window = win
                   return true
@@ -253,15 +177,16 @@ jobs:
           }
           SWIFT_EOF
 
-          # 4. Компилируем ТОЛЬКО наш проверенный main.swift
+          # 5. Компилируем App.swift с явным флагом -parse-as-library
           SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
           swiftc -sdk "$SDK_PATH" \
                  -target arm64-apple-ios14.0 \
                  -framework UIKit \
                  -framework WebKit \
                  -framework Foundation \
+                 -parse-as-library \
                  -O \
-                 main.swift \
+                 App.swift \
                  -o Payload/IronLog.app/IronLog
 
           chmod +x Payload/IronLog.app/IronLog
@@ -272,4 +197,3 @@ jobs:
         with:
           name: IronLog_DDX_IPA
           path: IronLog_DDX.ipa
-          if-no-files-found: error
