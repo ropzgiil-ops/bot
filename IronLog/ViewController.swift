@@ -12,7 +12,24 @@ class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
-        config.websiteDataStore = WKWebsiteDataStore.default()
+        
+        let prefs = WKWebpagePreferences()
+        prefs.allowsContentJavaScript = true
+        config.defaultWebpagePreferences = prefs
+
+        // Отключаем 300ms задержку тапа в iOS и системное выделение текста
+        let touchScript = WKUserScript(
+            source: """
+            var meta = document.createElement('meta');
+            meta.name = 'viewport';
+            meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            document.getElementsByTagName('head')[0].appendChild(meta);
+            document.documentElement.style.webkitTouchCallout = 'none';
+            """,
+            injectionTime: .atDocumentEnd,
+            forMainFrameOnly: true
+        )
+        config.userContentController.addUserScript(touchScript)
 
         webView = WKWebView(frame: .zero, configuration: config)
         webView.uiDelegate = self
@@ -20,7 +37,7 @@ class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate {
         webView.scrollView.bounces = false
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.isOpaque = false
-        webView.backgroundColor = UIColor(red: 0.02, green: 0.03, blue: 0.07, alpha: 1.0)
+        webView.backgroundColor = UIColor(red: 0.03, green: 0.05, blue: 0.08, alpha: 1.0)
 
         self.view = webView
     }
@@ -31,15 +48,22 @@ class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate {
     }
 
     func loadLocalApp() {
-        if let htmlPath = Bundle.main.path(forResource: "index", ofType: "html", inDirectory: "www") {
-            let url = URL(fileURLWithPath: htmlPath)
-            webView.loadFileURL(url, allowingReadAccessTo: Bundle.main.bundleURL)
-            return
+        let bundleURL = Bundle.main.bundleURL
+
+        let candidatePaths = [
+            bundleURL.appendingPathComponent("www").appendingPathComponent("index.html"),
+            bundleURL.appendingPathComponent("index.html")
+        ]
+
+        for fileURL in candidatePaths {
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                webView.loadFileURL(fileURL, allowingReadAccessTo: bundleURL)
+                return
+            }
         }
-        if let rootPath = Bundle.main.path(forResource: "index", ofType: "html") {
-            let url = URL(fileURLWithPath: rootPath)
-            webView.loadFileURL(url, allowingReadAccessTo: Bundle.main.bundleURL)
-            return
+
+        if let fallbackURL = Bundle.main.url(forResource: "index", withExtension: "html") {
+            webView.loadFileURL(fallbackURL, allowingReadAccessTo: bundleURL)
         }
     }
 }
