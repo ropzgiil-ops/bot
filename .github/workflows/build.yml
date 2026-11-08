@@ -9,12 +9,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Inject Clean Native Swift & Plist
+      - name: Generate Source and Build IPA
         run: |
-          mkdir -p IronLog
-          
+          set -e
+          mkdir -p Payload/IronLog.app
+
           # 1. Info.plist
-          cat << 'PLIST_EOF' > IronLog/Info.plist
+          cat << 'EOF' > Payload/IronLog.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -34,9 +35,9 @@ jobs:
           	<key>CFBundlePackageType</key>
           	<string>APPL</string>
           	<key>CFBundleShortVersionString</key>
-          	<string>6.0.0</string>
+          	<string>1.0.0</string>
           	<key>CFBundleVersion</key>
-          	<string>6</string>
+          	<string>1</string>
           	<key>LSRequiresIPhoneOS</key>
           	<true/>
           	<key>UILaunchScreen</key>
@@ -55,12 +56,14 @@ jobs:
           	</array>
           </dict>
           </plist>
-          PLIST_EOF
+          EOF
 
-          # 2. Native SwiftUI App Entrypoint
-          cat << 'APP_EOF' > IronLog/App.swift
+          # 2. Main Swift Source
+          cat << 'EOF' > main.swift
+          import UIKit
           import SwiftUI
 
+          // MARK: - Models
           struct WorkoutSet: Identifiable, Codable {
               var id = UUID()
               var weight: Double
@@ -99,9 +102,9 @@ jobs:
               var id = UUID()
               var sender: String
               var text: String
-              var time: String
           }
 
+          // MARK: - Data Store
           class WorkoutStore: ObservableObject {
               @Published var activeExercises: [Exercise] = []
               @Published var isWorkoutActive: Bool = false
@@ -120,8 +123,7 @@ jobs:
                   if chatMessages.isEmpty {
                       chatMessages.append(ChatMessage(
                           sender: "coach",
-                          text: "Привет, атлет! Я IronCoach. Твой сплит верхнего тела готов к работе. Задавай любой вопрос по технике, весам или питанию!",
-                          time: "Сейчас"
+                          text: "Привет, атлет! Я твой наставник IronCoach. Твой 3-дневный сплит на верх тела готов. Задавай вопросы по технике или весам!"
                       ))
                   }
               }
@@ -147,12 +149,10 @@ jobs:
               func finishWorkout() {
                   var volume: Double = 0
                   var completedSets = 0
-                  
                   for ex in activeExercises {
                       for set in ex.sets where set.isCompleted {
                           volume += set.weight * Double(set.reps)
                           completedSets += 1
-                          
                           let current1RM = set.oneRepMax
                           if let idx = records.firstIndex(where: { $0.exerciseName == ex.name }) {
                               if current1RM > records[idx].weight {
@@ -188,18 +188,14 @@ jobs:
                   let lastWeight = activeExercises[idx].sets.last?.weight ?? 60.0
                   let lastReps = activeExercises[idx].sets.last?.reps ?? 10
                   activeExercises[idx].sets.append(WorkoutSet(weight: lastWeight, reps: lastReps))
-                  let impact = UIImpactFeedbackGenerator(style: .medium)
-                  impact.impactOccurred()
+                  UIImpactFeedbackGenerator(style: .medium).impactOccurred()
               }
               
               func toggleSet(exerciseID: UUID, setID: UUID) {
                   guard let exIdx = activeExercises.firstIndex(where: { $0.id == exerciseID }),
                         let setIdx = activeExercises[exIdx].sets.firstIndex(where: { $0.id == setID }) else { return }
                   activeExercises[exIdx].sets[setIdx].isCompleted.toggle()
-                  
-                  let impact = UIImpactFeedbackGenerator(style: .rigid)
-                  impact.impactOccurred()
-                  
+                  UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
                   if activeExercises[exIdx].sets[setIdx].isCompleted {
                       startRestTimer(seconds: 90)
                   }
@@ -207,14 +203,11 @@ jobs:
               
               func sendMessageToCoach(text: String) {
                   guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                  let userMsg = ChatMessage(sender: "user", text: text, time: "Сейчас")
-                  chatMessages.append(userMsg)
-                  
-                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                      let replyText = self.generateCoachAnswer(for: text)
-                      self.chatMessages.append(ChatMessage(sender: "coach", text: replyText, time: "Сейчас"))
-                      let generator = UINotificationFeedbackGenerator()
-                      generator.notificationOccurred(.success)
+                  chatMessages.append(ChatMessage(sender: "user", text: text))
+                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                      let reply = self.generateCoachAnswer(for: text)
+                      self.chatMessages.append(ChatMessage(sender: "coach", text: reply))
+                      UINotificationFeedbackGenerator().notificationOccurred(.success)
                       self.saveData()
                   }
                   saveData()
@@ -223,13 +216,13 @@ jobs:
               private func generateCoachAnswer(for query: String) -> String {
                   let q = query.lowercased()
                   if q.contains("жим") {
-                      return "Жим лёжа: сведи лопатки, опусти плечи вниз к тазу. Локти держи под углом 70-75° к корпусу, гриф опускай на линию низа груди с паузой 1 сек. Выжимай мощно на выдохе."
+                      return "Жим лёжа: лопатки сведены и опущены к тазу, угол в локтях 70-75°, опускай на нижнюю часть груди. Мощный жим на выдохе."
                   } else if q.contains("креатин") {
-                      return "Креатин моногидрат: принимай стабильно по 5 грамм каждый день в одно и то же время, запивая водой. Накопительный эффект наступит через 2-3 недели."
+                      return "Креатин моногидрат: принимай каждый день стабильно по 5 грамм, запивая водой. Загрузка не требуется."
                   } else if q.contains("размин") {
-                      return "Пирамида разминки: 1) Гриф × 15-20 раз; 2) 50% от рабочего × 8 раз; 3) 70% × 4 раза; 4) 85% × 1-2 раза. После 2 минут отдыха переходи к рабочим подходам!"
+                      return "Пирамида разминки: 1) пустой гриф 15-20 раз; 2) 50% веса 8 раз; 3) 70% веса 4 раза; 4) 85% веса 1-2 раза. Отдых 2 мин и переход к рабочим весам."
                   } else {
-                      return "Держи прогрессию нагрузок: добавляй либо 1 повторение в подходе, либо 1-2.5 кг к штанге каждую неделю при чистой технике."
+                      return "Фокусируйся на прогрессии нагрузок: добавляй по 1-2.5 кг или +1 повторение каждую неделю при строгой технике."
                   }
               }
               
@@ -318,24 +311,7 @@ jobs:
               }
           }
 
-          @main
-          struct IronLogApp: App {
-              @StateObject private var store = WorkoutStore()
-              
-              var body: some Scene {
-                  WindowGroup {
-                      MainTabView()
-                          .environmentObject(store)
-                          .preferredColorScheme(.dark)
-                  }
-              }
-          }
-          APP_EOF
-
-          # 3. MainTabView.swift
-          cat << 'TAB_EOF' > IronLog/MainTabView.swift
-          import SwiftUI
-
+          // MARK: - UI Views
           struct MainTabView: View {
               @EnvironmentObject var store: WorkoutStore
               @State private var selectedTab = 0
@@ -343,36 +319,26 @@ jobs:
               var body: some View {
                   TabView(selection: $selectedTab) {
                       WorkoutView()
-                          .tabItem {
-                              Label("Зал", systemImage: "bolt.fill")
-                          }
+                          .tabItem { Label("Зал", systemImage: "bolt.fill") }
                           .tag(0)
                       
                       RecordsView()
-                          .tabItem {
-                              Label("Прогресс", systemImage: "trophy.fill")
-                          }
+                          .tabItem { Label("Рекорды", systemImage: "trophy.fill") }
                           .tag(1)
                       
                       TimerView()
-                          .tabItem {
-                              Label("Таймер", systemImage: "stopwatch.fill")
-                          }
+                          .tabItem { Label("Таймер", systemImage: "stopwatch.fill") }
                           .tag(2)
                       
                       HistoryView()
-                          .tabItem {
-                              Label("История", systemImage: "calendar")
-                          }
+                          .tabItem { Label("История", systemImage: "calendar") }
                           .tag(3)
                       
                       CoachChatView()
-                          .tabItem {
-                              Label("Тренер AI", systemImage: "bubble.left.and.bubble.right.fill")
-                          }
+                          .tabItem { Label("Тренер AI", systemImage: "bubble.left.and.bubble.right.fill") }
                           .tag(4)
                   }
-                  .accentColor(Color.cyan)
+                  .accentColor(.cyan)
               }
           }
 
@@ -383,16 +349,13 @@ jobs:
                   NavigationView {
                       ZStack {
                           Color(red: 0.03, green: 0.05, blue: 0.08).ignoresSafeArea()
-                          
                           ScrollView {
                               VStack(spacing: 16) {
                                   if store.isWorkoutActive {
-                                      activeWorkoutHeader
-                                      
-                                      ForEach(store.activeExercises) { exercise in
-                                          ExerciseCard(exercise: exercise)
+                                      activeHeader
+                                      ForEach(store.activeExercises) { ex in
+                                          ExerciseCard(exercise: ex)
                                       }
-                                      
                                       Button(action: { store.finishWorkout() }) {
                                           HStack {
                                               Image(systemName: "checkmark.circle.fill")
@@ -402,13 +365,11 @@ jobs:
                                           .foregroundColor(.black)
                                           .frame(maxWidth: .infinity)
                                           .frame(height: 52)
-                                          .background(LinearGradient(colors: [.cyan, .teal], startPoint: .leading, endPoint: .trailing))
-                                          .cornerRadius(14)
-                                          .shadow(color: .cyan.opacity(0.4), radius: 8, y: 4)
+                                          .background(Color.cyan)
+                                          .cornerRadius(12)
                                       }
-                                      .padding(.top, 10)
                                   } else {
-                                      idleWorkoutHeader
+                                      idleHeader
                                   }
                               }
                               .padding()
@@ -419,100 +380,63 @@ jobs:
                   }
               }
               
-              var idleWorkoutHeader: some View {
-                  VStack(spacing: 20) {
-                      VStack(alignment: .leading, spacing: 8) {
-                          Text("Твой 3-дневный сплит (Верх тела)")
-                              .font(.caption)
-                              .foregroundColor(.cyan)
-                              .fontWeight(.bold)
+              var idleHeader: some View {
+                  VStack(spacing: 14) {
+                      VStack(alignment: .leading, spacing: 6) {
+                          Text("3-дневный сплит (Верх тела)")
+                              .font(.caption).bold().foregroundColor(.cyan)
                           Text("Время качать железо!")
-                              .font(.title2)
-                              .fontWeight(.heavy)
-                              .foregroundColor(.white)
-                          Text("Сплит: 1. Грудь/Бицепс  •  2. Спина/Плечи  •  3. Трицепс/Хват")
-                              .font(.subheadline)
-                              .foregroundColor(.gray)
+                              .font(.title2).bold().foregroundColor(.white)
                       }
                       .frame(maxWidth: .infinity, alignment: .leading)
                       .padding()
                       .background(Color(red: 0.07, green: 0.1, blue: 0.15))
-                      .cornerRadius(16)
+                      .cornerRadius(14)
                       
-                      VStack(spacing: 12) {
-                          splitButton(title: "⚡ День 1: Грудь & Бицепс", subtitle: "Жим штанги, наклонные гантели, бицепс стоя") {
-                              store.startWorkout(title: "День 1: Грудь & Бицепс")
-                          }
-                          splitButton(title: "⚡ День 2: Спина & Плечи", subtitle: "Верхний блок, тяга к поясу, махи") {
-                              store.startWorkout(title: "День 2: Спина & Плечи")
-                          }
-                          splitButton(title: "⚡ День 3: Трицепс & Хват", subtitle: "Французский жим, канат, предплечья") {
-                              store.startWorkout(title: "День 3: Трицепс & Хват")
-                          }
+                      splitBtn(title: "⚡ День 1: Грудь & Бицепс", sub: "Жим штанги, наклонные гантели, бицепс стоя") {
+                          store.startWorkout(title: "День 1: Грудь & Бицепс")
+                      }
+                      splitBtn(title: "⚡ День 2: Спина & Плечи", sub: "Верхний блок, горизонтальная тяга, махи") {
+                          store.startWorkout(title: "День 2: Спина & Плечи")
+                      }
+                      splitBtn(title: "⚡ День 3: Трицепс & Хват", sub: "Французский жим, канат, предплечья") {
+                          store.startWorkout(title: "День 3: Трицепс & Хват")
                       }
                   }
               }
               
-              var activeWorkoutHeader: some View {
+              var activeHeader: some View {
                   HStack {
                       VStack(alignment: .leading) {
-                          Text("ИДЕТ ТРЕНИРОВКА")
-                              .font(.caption2)
-                              .foregroundColor(.cyan)
-                              .fontWeight(.bold)
-                          Text(formatTime(store.workoutTimerSeconds))
-                              .font(.title)
-                              .fontWeight(.heavy)
-                              .foregroundColor(.white)
+                          Text("ИДЕТ ТРЕНИРОВКА").font(.caption2).bold().foregroundColor(.cyan)
+                          Text(formatTime(store.workoutTimerSeconds)).font(.title).bold().foregroundColor(.white)
                       }
                       Spacer()
                       if store.isRestTimerRunning {
                           VStack(alignment: .trailing) {
-                              Text("ОТДЫХ")
-                                  .font(.caption2)
-                                  .foregroundColor(.orange)
-                                  .fontWeight(.bold)
-                              Text("\(store.restTimerSeconds) сек")
-                                  .font(.title2)
-                                  .fontWeight(.bold)
-                                  .foregroundColor(.orange)
+                              Text("ОТДЫХ").font(.caption2).bold().foregroundColor(.orange)
+                              Text("\(store.restTimerSeconds) сек").font(.title2).bold().foregroundColor(.orange)
                           }
-                          .padding(.horizontal, 12)
-                          .padding(.vertical, 6)
-                          .background(Color.orange.opacity(0.15))
-                          .cornerRadius(10)
+                          .padding(.horizontal, 10).padding(.vertical, 4)
+                          .background(Color.orange.opacity(0.15)).cornerRadius(8)
                       }
                   }
-                  .padding()
-                  .background(Color(red: 0.07, green: 0.1, blue: 0.15))
-                  .cornerRadius(14)
+                  .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(12)
               }
               
-              func splitButton(title: String, subtitle: String, action: @escaping () -> Void) -> some View {
+              func splitBtn(title: String, sub: String, action: @escaping () -> Void) -> some View {
                   Button(action: action) {
                       VStack(alignment: .leading, spacing: 4) {
-                          Text(title)
-                              .font(.headline)
-                              .foregroundColor(.white)
-                          Text(subtitle)
-                              .font(.caption)
-                              .foregroundColor(.gray)
+                          Text(title).font(.headline).foregroundColor(.white)
+                          Text(sub).font(.caption).foregroundColor(.gray)
                       }
                       .frame(maxWidth: .infinity, alignment: .leading)
-                      .padding()
-                      .background(Color(red: 0.08, green: 0.12, blue: 0.18))
-                      .cornerRadius(14)
-                      .overlay(
-                          RoundedRectangle(cornerRadius: 14)
-                              .stroke(Color.cyan.opacity(0.3), lineWidth: 1)
-                      )
+                      .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(12)
                   }
               }
               
-              func formatTime(_ totalSeconds: Int) -> String {
-                  let m = totalSeconds / 60
-                  let s = totalSeconds % 60
-                  return String(format: "%02d:%02d", m, s)
+              func formatTime(_ sec: Int) -> String {
+                  String(format: "%02d:%02d", sec / 60, sec % 60)
               }
           }
 
@@ -521,291 +445,127 @@ jobs:
               var exercise: Exercise
               
               var body: some View {
-                  VStack(alignment: .leading, spacing: 12) {
+                  VStack(alignment: .leading, spacing: 10) {
                       HStack {
-                          Text(exercise.name)
-                              .font(.headline)
-                              .foregroundColor(.white)
+                          Text(exercise.name).font(.headline).foregroundColor(.white)
                           Spacer()
                           Text(exercise.muscleGroup)
-                              .font(.caption2)
-                              .fontWeight(.bold)
-                              .padding(.horizontal, 8)
-                              .padding(.vertical, 4)
-                              .background(Color.cyan.opacity(0.2))
-                              .foregroundColor(.cyan)
-                              .cornerRadius(6)
+                              .font(.caption2).bold().padding(.horizontal, 6).padding(.vertical, 2)
+                              .background(Color.cyan.opacity(0.2)).foregroundColor(.cyan).cornerRadius(4)
                       }
-                      
-                      VStack(spacing: 8) {
-                          ForEach(Array(exercise.sets.enumerated()), id: \.element.id) { index, set in
-                              HStack {
-                                  Text("\(index + 1)")
-                                      .font(.subheadline)
-                                      .foregroundColor(.gray)
-                                      .frame(width: 24)
-                                  
-                                  Text("\(Int(set.weight)) кг × \(set.reps)")
-                                      .font(.subheadline)
-                                      .fontWeight(.medium)
-                                      .foregroundColor(.white)
-                                  
-                                  if set.oneRepMax > 0 {
-                                      Text("1RM: \(Int(set.oneRepMax)) кг")
-                                          .font(.caption2)
-                                          .foregroundColor(.cyan)
-                                          .padding(.horizontal, 6)
-                                          .padding(.vertical, 2)
-                                          .background(Color.cyan.opacity(0.1))
-                                          .cornerRadius(4)
-                                  }
-                                  
-                                  Spacer()
-                                  
-                                  Button(action: {
-                                      store.toggleSet(exerciseID: exercise.id, setID: set.id)
-                                  }) {
-                                      Image(systemName: set.isCompleted ? "checkmark.circle.fill" : "circle")
-                                          .font(.title3)
-                                          .foregroundColor(set.isCompleted ? .teal : .gray)
-                                  }
-                              }
-                              .padding(.vertical, 6)
-                              .padding(.horizontal, 10)
-                              .background(set.isCompleted ? Color.teal.opacity(0.1) : Color(red: 0.05, green: 0.08, blue: 0.12))
-                              .cornerRadius(8)
-                          }
-                      }
-                      
-                      Button(action: { store.addSet(to: exercise.id) }) {
+                      ForEach(Array(exercise.sets.enumerated()), id: \.element.id) { idx, set in
                           HStack {
-                              Image(systemName: "plus")
-                              Text("Добавить подход")
+                              Text("\(idx + 1)").foregroundColor(.gray).frame(width: 20)
+                              Text("\(Int(set.weight)) кг × \(set.reps)").foregroundColor(.white)
+                              if set.oneRepMax > 0 {
+                                  Text("1RM: \(Int(set.oneRepMax))").font(.caption2).foregroundColor(.cyan)
+                              }
+                              Spacer()
+                              Button(action: { store.toggleSet(exerciseID: exercise.id, setID: set.id) }) {
+                                  Image(systemName: set.isCompleted ? "checkmark.circle.fill" : "circle")
+                                      .font(.title3).foregroundColor(set.isCompleted ? .teal : .gray)
+                              }
                           }
-                          .font(.caption)
-                          .fontWeight(.bold)
-                          .foregroundColor(.cyan)
-                          .frame(maxWidth: .infinity)
-                          .frame(height: 34)
-                          .background(Color.cyan.opacity(0.12))
-                          .cornerRadius(8)
+                          .padding(8).background(Color(red: 0.05, green: 0.08, blue: 0.12)).cornerRadius(8)
+                      }
+                      Button(action: { store.addSet(to: exercise.id) }) {
+                          HStack { Image(systemName: "plus"); Text("Добавить подход") }
+                              .font(.caption).bold().foregroundColor(.cyan)
+                              .frame(maxWidth: .infinity).frame(height: 32)
+                              .background(Color.cyan.opacity(0.12)).cornerRadius(8)
                       }
                   }
-                  .padding()
-                  .background(Color(red: 0.07, green: 0.1, blue: 0.15))
-                  .cornerRadius(14)
+                  .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(12)
               }
           }
 
           struct RecordsView: View {
               @EnvironmentObject var store: WorkoutStore
-              @State private var newExerciseName = ""
-              @State private var newWeight = ""
+              @State private var name = ""
+              @State private var weight = ""
               
               var body: some View {
                   NavigationView {
                       ZStack {
                           Color(red: 0.03, green: 0.05, blue: 0.08).ignoresSafeArea()
-                          
                           ScrollView {
-                              VStack(spacing: 20) {
-                                  VStack(spacing: 12) {
-                                      Text("Твои рекорды (1RM)")
-                                          .font(.title2)
-                                          .fontWeight(.bold)
-                                          .foregroundColor(.white)
-                                          .frame(maxWidth: .infinity, alignment: .leading)
-                                      
-                                      ForEach(store.records) { rec in
-                                          HStack {
-                                              VStack(alignment: .leading) {
-                                                  Text(rec.exerciseName)
-                                                      .font(.headline)
-                                                      .foregroundColor(.white)
-                                                  Text(rec.date, style: .date)
-                                                      .font(.caption2)
-                                                      .foregroundColor(.gray)
-                                              }
-                                              Spacer()
-                                              Text("\(Int(rec.weight)) кг")
-                                                  .font(.title3)
-                                                  .fontWeight(.heavy)
-                                                  .foregroundColor(.cyan)
-                                          }
-                                          .padding()
-                                          .background(Color(red: 0.07, green: 0.1, blue: 0.15))
-                                          .cornerRadius(12)
+                              VStack(spacing: 16) {
+                                  ForEach(store.records) { r in
+                                      HStack {
+                                          Text(r.exerciseName).foregroundColor(.white)
+                                          Spacer()
+                                          Text("\(Int(r.weight)) кг").bold().foregroundColor(.cyan)
                                       }
+                                      .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(10)
                                   }
-                                  
-                                  VStack(alignment: .leading, spacing: 10) {
-                                      Text("Записать новый рекорд")
-                                          .font(.headline)
-                                          .foregroundColor(.white)
-                                      
-                                      TextField("Упражнение", text: $newExerciseName)
-                                          .padding()
-                                          .background(Color(red: 0.07, green: 0.1, blue: 0.15))
-                                          .cornerRadius(10)
-                                          .foregroundColor(.white)
-                                      
-                                      TextField("Максимальный вес (кг)", text: $newWeight)
+                                  VStack(spacing: 8) {
+                                      TextField("Название упражнения", text: $name)
+                                          .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(8)
+                                      TextField("Вес (кг)", text: $weight)
                                           .keyboardType(.decimalPad)
-                                          .padding()
-                                          .background(Color(red: 0.07, green: 0.1, blue: 0.15))
-                                          .cornerRadius(10)
-                                          .foregroundColor(.white)
-                                      
-                                      Button(action: saveRecord) {
-                                          Text("Сохранить рекорд")
-                                              .fontWeight(.bold)
-                                              .foregroundColor(.black)
-                                              .frame(maxWidth: .infinity)
-                                              .frame(height: 48)
-                                              .background(Color.cyan)
-                                              .cornerRadius(10)
+                                          .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(8)
+                                      Button("Добавить рекорд") {
+                                          if let w = Double(weight), !name.isEmpty {
+                                              store.records.append(PersonalRecord(exerciseName: name, weight: w, date: Date()))
+                                              name = ""; weight = ""
+                                          }
                                       }
+                                      .frame(maxWidth: .infinity).frame(height: 44)
+                                      .background(Color.cyan).foregroundColor(.black).bold().cornerRadius(8)
                                   }
-                                  .padding()
-                                  .background(Color(red: 0.05, green: 0.08, blue: 0.12))
-                                  .cornerRadius(14)
+                                  .padding().background(Color(red: 0.05, green: 0.08, blue: 0.12)).cornerRadius(12)
                               }
                               .padding()
                           }
                       }
-                      .navigationTitle("Прогресс")
+                      .navigationTitle("Рекорды 1RM")
                       .navigationBarTitleDisplayMode(.inline)
                   }
-              }
-              
-              func saveRecord() {
-                  guard let w = Double(newWeight), !newExerciseName.isEmpty else { return }
-                  store.records.append(PersonalRecord(exerciseName: newExerciseName, weight: w, date: Date()))
-                  newExerciseName = ""
-                  newWeight = ""
-                  let generator = UINotificationFeedbackGenerator()
-                  generator.notificationOccurred(.success)
               }
           }
 
           struct TimerView: View {
               @EnvironmentObject var store: WorkoutStore
-              @State private var selectedSeconds = 90
-              
               var body: some View {
                   ZStack {
                       Color(red: 0.03, green: 0.05, blue: 0.08).ignoresSafeArea()
-                      
-                      VStack(spacing: 30) {
-                          Text("Таймер отдыха")
-                              .font(.title)
-                              .fontWeight(.bold)
-                              .foregroundColor(.white)
-                          
-                          ZStack {
-                              Circle()
-                                  .stroke(Color.gray.opacity(0.2), lineWidth: 16)
-                                  .frame(width: 240, height: 240)
-                              Circle()
-                                  .stroke(Color.cyan, style: StrokeStyle(lineWidth: 16, lineCap: .round))
-                                  .frame(width: 240, height: 240)
-                              
-                              VStack {
-                                  Text("\(store.restTimerSeconds)")
-                                      .font(.system(size: 64, weight: .heavy, design: .rounded))
-                                      .foregroundColor(.white)
-                                  Text("СЕКУНД")
-                                      .font(.caption)
-                                      .fontWeight(.bold)
-                                      .foregroundColor(.gray)
+                      VStack(spacing: 24) {
+                          Text("\(store.restTimerSeconds)").font(.system(size: 72, weight: .bold)).foregroundColor(.cyan)
+                          HStack(spacing: 10) {
+                              ForEach([60, 90, 120, 180], id: \.self) { s in
+                                  Button("\(s)с") { store.startRestTimer(seconds: s) }
+                                      .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(8)
                               }
                           }
-                          
-                          HStack(spacing: 12) {
-                              timerPresetButton(title: "60с", sec: 60)
-                              timerPresetButton(title: "90с", sec: 90)
-                              timerPresetButton(title: "120с", sec: 120)
-                              timerPresetButton(title: "180с", sec: 180)
+                          Button(store.isRestTimerRunning ? "Стоп" : "Старт 90с") {
+                              if store.isRestTimerRunning { store.isRestTimerRunning = false }
+                              else { store.startRestTimer(seconds: 90) }
                           }
-                          
-                          Button(action: {
-                              if store.isRestTimerRunning {
-                                  store.isRestTimerRunning = false
-                              } else {
-                                  store.startRestTimer(seconds: selectedSeconds)
-                              }
-                          }) {
-                              Text(store.isRestTimerRunning ? "Остановить" : "Запустить таймер")
-                                  .font(.headline)
-                                  .foregroundColor(.black)
-                                  .frame(maxWidth: .infinity)
-                                  .frame(height: 52)
-                                  .background(store.isRestTimerRunning ? Color.orange : Color.cyan)
-                                  .cornerRadius(14)
-                          }
+                          .frame(maxWidth: .infinity).frame(height: 48)
+                          .background(Color.cyan).foregroundColor(.black).bold().cornerRadius(10)
                           .padding(.horizontal, 40)
                       }
-                      .padding()
-                  }
-              }
-              
-              func timerPresetButton(title: String, sec: Int) -> some View {
-                  Button(action: {
-                      selectedSeconds = sec
-                      store.startRestTimer(seconds: sec)
-                  }) {
-                      Text(title)
-                          .font(.headline)
-                          .foregroundColor(.white)
-                          .frame(width: 68, height: 44)
-                          .background(Color(red: 0.08, green: 0.12, blue: 0.18))
-                          .cornerRadius(10)
                   }
               }
           }
 
           struct HistoryView: View {
               @EnvironmentObject var store: WorkoutStore
-              
               var body: some View {
                   NavigationView {
                       ZStack {
                           Color(red: 0.03, green: 0.05, blue: 0.08).ignoresSafeArea()
-                          
-                          if store.history.isEmpty {
-                              VStack(spacing: 12) {
-                                  Image(systemName: "calendar.badge.clock")
-                                      .font(.system(size: 48))
-                                      .foregroundColor(.gray)
-                                  Text("История пока пуста")
-                                      .font(.headline)
-                                      .foregroundColor(.gray)
+                          List(store.history) { h in
+                              VStack(alignment: .leading, spacing: 4) {
+                                  Text(h.title).bold().foregroundColor(.white)
+                                  Text("Тоннаж: \(Int(h.totalVolume)) кг • Подходов: \(h.totalSets)")
+                                      .font(.caption).foregroundColor(.gray)
                               }
-                          } else {
-                              List {
-                                  ForEach(store.history) { item in
-                                      VStack(alignment: .leading, spacing: 6) {
-                                          Text(item.title)
-                                              .font(.headline)
-                                              .foregroundColor(.white)
-                                          HStack {
-                                              Text(item.date, style: .date)
-                                              Spacer()
-                                              Text("Тоннаж: \(Int(item.totalVolume)) кг")
-                                                  .foregroundColor(.cyan)
-                                              Text("• Подходов: \(item.totalSets)")
-                                          }
-                                          .font(.caption)
-                                          .foregroundColor(.gray)
-                                      }
-                                      .padding(.vertical, 4)
-                                      .listRowBackground(Color(red: 0.07, green: 0.1, blue: 0.15))
-                                  }
-                              }
-                              .scrollContentBackground(.hidden)
+                              .listRowBackground(Color(red: 0.07, green: 0.1, blue: 0.15))
                           }
+                          .scrollContentBackground(.hidden)
                       }
-                      .navigationTitle("История тренировок")
+                      .navigationTitle("История")
                       .navigationBarTitleDisplayMode(.inline)
                   }
               }
@@ -813,53 +573,38 @@ jobs:
 
           struct CoachChatView: View {
               @EnvironmentObject var store: WorkoutStore
-              @State private var inputText = ""
+              @State private var text = ""
               
               var body: some View {
                   NavigationView {
                       ZStack {
                           Color(red: 0.03, green: 0.05, blue: 0.08).ignoresSafeArea()
-                          
                           VStack {
-                              ScrollViewReader { proxy in
-                                  ScrollView {
-                                      LazyVStack(spacing: 12) {
-                                          ForEach(store.chatMessages) { msg in
-                                              HStack {
-                                                  if msg.sender == "user" { Spacer() }
-                                                  Text(msg.text)
-                                                      .padding()
-                                                      .background(msg.sender == "user" ? Color.cyan.opacity(0.25) : Color(red: 0.08, green: 0.12, blue: 0.18))
-                                                      .foregroundColor(.white)
-                                                      .cornerRadius(14)
-                                                      .frame(maxWidth: 280, alignment: msg.sender == "user" ? .trailing : .leading)
-                                                  if msg.sender == "coach" { Spacer() }
-                                              }
-                                              .id(msg.id)
+                              ScrollView {
+                                  VStack(spacing: 10) {
+                                      ForEach(store.chatMessages) { m in
+                                          HStack {
+                                              if m.sender == "user" { Spacer() }
+                                              Text(m.text)
+                                                  .padding(10)
+                                                  .background(m.sender == "user" ? Color.cyan.opacity(0.3) : Color(red: 0.07, green: 0.1, blue: 0.15))
+                                                  .cornerRadius(10)
+                                                  .foregroundColor(.white)
+                                              if m.sender == "coach" { Spacer() }
                                           }
                                       }
-                                      .padding()
                                   }
-                                  .onChange(of: store.chatMessages.count) { _ in
-                                      if let last = store.chatMessages.last {
-                                          proxy.scrollTo(last.id, anchor: .bottom)
-                                      }
-                                  }
+                                  .padding()
                               }
-                              
                               HStack {
-                                  TextField("Спроси тренера о технике...", text: $inputText)
-                                      .padding(12)
-                                      .background(Color(red: 0.08, green: 0.12, blue: 0.18))
-                                      .cornerRadius(10)
-                                      .foregroundColor(.white)
-                                  
-                                  Button(action: send) {
-                                      Image(systemName: "paperplane.fill")
-                                          .font(.title3)
-                                          .foregroundColor(.cyan)
-                                          .padding(10)
+                                  TextField("Вопрос тренеру...", text: $text)
+                                      .padding(10).background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(8)
+                                  Button("➤") {
+                                      let query = text
+                                      text = ""
+                                      store.sendMessageToCoach(text: query)
                                   }
+                                  .font(.title2).foregroundColor(.cyan).padding(.horizontal, 8)
                               }
                               .padding()
                           }
@@ -868,30 +613,30 @@ jobs:
                       .navigationBarTitleDisplayMode(.inline)
                   }
               }
-              
-              func send() {
-                  let text = inputText
-                  inputText = ""
-                  store.sendMessageToCoach(text: text)
+          }
+
+          // MARK: - App Entrypoint
+          @UIApplicationMain
+          class AppDelegate: UIResponder, UIApplicationDelegate {
+              var window: UIWindow?
+              func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+                  let window = UIWindow(frame: UIScreen.main.bounds)
+                  window.rootViewController = UIHostingController(rootView: MainTabView().environmentObject(WorkoutStore()))
+                  self.window = window
+                  window.makeKeyAndVisible()
+                  return true
               }
           }
-          TAB_EOF
+          EOF
 
-      - name: Compile Native SwiftUI to Apple Mach-O arm64
-        run: |
-          set -e
+          # 3. Direct Native Compilation
           SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
-          mkdir -p Payload/IronLog.app
-
-          cp IronLog/Info.plist Payload/IronLog.app/Info.plist
-
           swiftc -sdk "$SDK_PATH" \
                  -target arm64-apple-ios15.0 \
                  -framework UIKit \
                  -framework SwiftUI \
                  -O \
-                 IronLog/App.swift \
-                 IronLog/MainTabView.swift \
+                 main.swift \
                  -o Payload/IronLog.app/IronLog
 
           chmod +x Payload/IronLog.app/IronLog
