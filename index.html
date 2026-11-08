@@ -347,11 +347,11 @@
 <body class="min-h-screen flex flex-col select-none antialiased">
 
   <!-- TOP HEADER WITH EDITABLE NICKNAME -->
-  <header class="sticky top-0 z-40 bg-zinc-950/92 backdrop-blur-2xl border-b border-white/10 px-3.5 pb-2.5 shadow-xl transition-all" style="padding-top: max(env(safe-area-inset-top, 44px), 44px);">
+  <header class="sticky top-0 z-40 bg-zinc-950/95 backdrop-blur-2xl border-b border-white/10 px-3.5 pb-2.5 shadow-2xl transition-all" style="padding-top: max(env(safe-area-inset-top, 44px), 44px);">
     <div class="max-w-xl mx-auto flex items-center justify-between gap-2">
       
       <!-- Logo & Nickname editor -->
-      <div class="flex items-center gap-2.5 min-w-0">
+      <div class="flex items-center gap-2 min-w-0">
         <div class="w-9 h-9 rounded-xl p-[2px] shadow-lg flex items-center justify-center tap-btn shrink-0" style="background: var(--btn-grad);">
           <div class="w-full h-full bg-zinc-950 rounded-[10px] flex items-center justify-center text-emerald-400">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -362,7 +362,7 @@
 
         <div class="min-w-0">
           <button id="btn-edit-nickname" class="tap-btn flex items-center gap-1 text-left group">
-            <span id="label-user-nickname" class="text-sm font-black tracking-tight text-white group-hover:text-cyan-300 transition truncate max-w-[125px]">
+            <span id="label-user-nickname" class="text-sm font-black tracking-tight text-white group-hover:text-cyan-300 transition truncate max-w-[110px]">
               Атлет DDX
             </span>
             <span class="text-[10px] text-zinc-500">✏️</span>
@@ -376,23 +376,43 @@
         </div>
       </div>
 
-      <!-- Quick Action Icons -->
-      <div class="flex items-center gap-1.5 shrink-0">
-        <button id="btn-open-tools-modal" class="tap-btn p-2 rounded-xl bg-zinc-900/90 border border-zinc-700/80 text-zinc-300 hover:text-cyan-400 text-xs flex items-center justify-center shadow-sm" title="Калькулятор блинов">
+      <!-- Quick Action Icons (All 4 Buttons, Perfectly Sized for 375px!) -->
+      <div class="flex items-center gap-1 shrink-0">
+        <button id="btn-open-calendar-top" class="tap-btn p-2 rounded-xl bg-zinc-900 border border-zinc-700/80 text-zinc-300 hover:text-white text-xs flex items-center justify-center shadow-sm" title="Календарь тренировок">
+          <span>📅</span>
+        </button>
+        <button id="btn-open-tools-modal" class="tap-btn p-2 rounded-xl bg-zinc-900 border border-zinc-700/80 text-zinc-300 hover:text-cyan-400 text-xs flex items-center justify-center shadow-sm" title="Калькулятор блинов">
           <span>🧮</span>
         </button>
-        <button id="btn-open-theme-modal" class="tap-btn px-2.5 py-1.5 rounded-xl bg-purple-950/70 border border-purple-500/50 text-xs flex items-center gap-1 font-bold text-purple-300 hover:border-purple-400 shadow-sm" title="Сменить дизайн">
+        <button id="btn-open-theme-modal" class="tap-btn px-2 py-1.5 rounded-xl bg-purple-950/70 border border-purple-500/50 text-xs flex items-center gap-1 font-bold text-purple-300 hover:border-purple-400 shadow-sm" title="Сменить дизайн">
           <span>🎨</span>
-          <span class="text-[11px] font-black">Стиль</span>
+          <span class="text-[10px] font-black hidden xs:inline">Стиль</span>
         </button>
-        <button id="btn-open-sync-modal" class="tap-btn px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600/30 to-blue-600/30 border border-cyan-500/50 text-xs flex items-center gap-1 font-bold text-cyan-300 hover:border-cyan-400 shadow-sm" title="Синхронизация">
+        <button id="btn-open-sync-modal" class="tap-btn px-2 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600/30 to-blue-600/30 border border-cyan-500/50 text-xs flex items-center gap-1 font-bold text-cyan-300 hover:border-cyan-400 shadow-sm" title="Синхронизация">
           <span class="text-xs">🔄</span>
-          <span class="text-[11px] font-black">Синхро</span>
+          <span class="text-[10px] font-black hidden xs:inline">Синхро</span>
         </button>
       </div>
 
     </div>
   </header>
+
+  <!-- HYDRATION & CREATINE ACTIVE TRACKER STRIP -->
+  <div class="max-w-xl mx-auto px-4 pt-1 pb-2 flex items-center justify-between text-xs">
+    <div class="flex items-center gap-2">
+      <button id="btn-quick-add-water" class="tap-btn px-2.5 py-1 rounded-xl bg-sky-950/60 border border-sky-500/40 text-sky-300 font-bold flex items-center gap-1.5 shadow-sm">
+        <span>💧</span>
+        <span id="label-quick-water-count">Вода: 750 мл</span>
+        <span class="text-[10px] text-sky-400 font-black">+250</span>
+      </button>
+      <button id="btn-quick-add-creatine" class="tap-btn px-2.5 py-1 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 font-bold flex items-center gap-1.5 shadow-sm">
+        <span>💊</span>
+        <span id="label-quick-creatine-count">Креатин 5г</span>
+        <span class="text-[10px] text-emerald-400 font-black">✓</span>
+      </button>
+    </div>
+    <span class="text-[10px] font-mono text-zinc-500">DDX Elite Mode</span>
+  </div>
 
   <!-- TOP DYNAMIC ISLAND: ACTIVE WORKOUT & REST TIMER (No overlapping!) -->
   <div id="dynamic-island-banner" class="hidden sticky top-14 z-30 px-3.5 py-1.5 max-w-xl mx-auto w-full">
@@ -567,6 +587,9 @@
           <h2 class="text-xl font-black text-white">Все тренировки</h2>
           <p class="text-xs text-zinc-400">Календарь занятий — нажмите на любой день для деталей</p>
         </div>
+        <button id="btn-open-schedule-modal" class="tap-btn btn-theme px-3 py-1.5 rounded-xl font-black text-xs flex items-center gap-1 shadow-md">
+          <span>➕</span> Запланировать
+        </button>
       </div>
 
       <!-- Calendar Card -->
@@ -608,7 +631,7 @@
     <!-- ============================================== -->
     <section id="tab-records" class="hidden space-y-4">
       <!-- PROGRESS SUBTABS (SEGMENTED SWITCHER) -->
-      <div class="flex items-center gap-1 p-1 bg-zinc-950/90 rounded-2xl border border-zinc-800 max-w-xl mx-auto shadow-lg sticky top-14 z-30 backdrop-blur-xl">
+      <div class="relative z-20 mb-4 mt-1 flex items-center gap-1 p-1 bg-zinc-900/90 rounded-2xl border border-zinc-800/90 max-w-xl mx-auto shadow-xl">
         <button data-subtab="records" onclick="switchProgressTab('records')" class="progress-subtab-btn flex-1 py-2 rounded-xl text-xs font-black transition active bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm">
           🏆 Рекорды 1RM
         </button>
@@ -685,7 +708,7 @@
     <!-- ============================================== -->
     <section id="tab-exercises" class="hidden space-y-3.5">
       <!-- PROGRESS SUBTABS (SEGMENTED SWITCHER) -->
-      <div class="flex items-center gap-1 p-1 bg-zinc-950/90 rounded-2xl border border-zinc-800 max-w-xl mx-auto shadow-lg sticky top-14 z-30 backdrop-blur-xl">
+      <div class="relative z-20 mb-4 mt-1 flex items-center gap-1 p-1 bg-zinc-900/90 rounded-2xl border border-zinc-800/90 max-w-xl mx-auto shadow-xl">
         <button data-subtab="records" onclick="switchProgressTab('records')" class="progress-subtab-btn flex-1 py-2 rounded-xl text-xs font-black transition active bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm">
           🏆 Рекорды 1RM
         </button>
@@ -734,7 +757,7 @@
     <!-- ============================================== -->
     <section id="tab-measurements" class="hidden space-y-4">
       <!-- PROGRESS SUBTABS (SEGMENTED SWITCHER) -->
-      <div class="flex items-center gap-1 p-1 bg-zinc-950/90 rounded-2xl border border-zinc-800 max-w-xl mx-auto shadow-lg sticky top-14 z-30 backdrop-blur-xl">
+      <div class="relative z-20 mb-4 mt-1 flex items-center gap-1 p-1 bg-zinc-900/90 rounded-2xl border border-zinc-800/90 max-w-xl mx-auto shadow-xl">
         <button data-subtab="records" onclick="switchProgressTab('records')" class="progress-subtab-btn flex-1 py-2 rounded-xl text-xs font-black transition active bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm">
           🏆 Рекорды 1RM
         </button>
@@ -1146,8 +1169,8 @@
 
           <input type="text" id="inp-coach-query" placeholder="Спроси тренера или покажи фото..." class="min-w-0 flex-1 bg-zinc-950 border border-zinc-700/80 rounded-xl px-2.5 sm:px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400">
 
-          <button id="btn-coach-send" class="tap-btn btn-theme w-8 h-8 sm:w-auto sm:px-3.5 sm:py-2 rounded-xl text-xs font-black uppercase shrink-0 flex items-center justify-center gap-1 p-0">
-            <span>➤</span>
+          <button id="btn-coach-send" type="button" class="tap-btn btn-theme w-10 h-10 rounded-2xl text-sm font-black uppercase shrink-0 flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+            <span class="text-base">➤</span>
           </button>
         </div>
       </div>
@@ -2650,9 +2673,38 @@
       document.getElementById('dynamic-island-banner').classList.add('hidden');
       saveState();
 
+      // Auto-detect and award 1RM records from completed heavy sets
+      let newRecordUnlocked = false;
+      w.exercises.forEach(ex => {
+        ex.sets.forEach(s => {
+          if (s.done && s.weight > 0) {
+            const curRec = (appState.records1RM || []).find(r => r.exerciseName === ex.name);
+            if (!curRec || s.weight > curRec.weight) {
+              appState.records1RM = appState.records1RM || [];
+              appState.records1RM.unshift({
+                id: 'rec_auto_' + Date.now(),
+                exerciseName: ex.name,
+                weight: s.weight,
+                date: today.toISOString().slice(0, 10),
+                notes: 'Зафиксирован на тренировке 🔥'
+              });
+              newRecordUnlocked = true;
+            }
+          }
+        });
+      });
+
+      playFanfareSound();
+      triggerParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 45);
+      if (navigator.vibrate) try { navigator.vibrate([150, 80, 150, 80, 350]); } catch(e) {}
+
       renderWorkoutTab();
       switchTab('calendar');
-      showToast(`🏆 Тренировка сохранена в календарь! Тоннаж: ${vol.toLocaleString('ru-RU')} кг`);
+      if (newRecordUnlocked) {
+        showToast(`🏆 Тренировка завершена! Тоннаж: ${vol.toLocaleString('ru-RU')} кг. УСТАНОВЛЕН НОВЫЙ РЕКОРД 🔥`);
+      } else {
+        showToast(`🏆 Тренировка сохранена! Тоннаж: ${vol.toLocaleString('ru-RU')} кг (подходов: ${totalSets})`);
+      }
     }
 
     // --- 5. RENDER WORKOUT TAB ---
@@ -2805,6 +2857,9 @@
               </div>
 
               <div class="flex items-center gap-1">
+                <button data-weight="${ex.sets?.[0]?.weight || 60}" class="btn-quick-ex-plates tap-btn btn-dark px-2 py-1.5 rounded-xl text-amber-400 text-xs font-bold flex items-center gap-1" title="Показать блины на штангу">
+                  <span>🧮</span><span class="text-[10px] font-mono font-black">${ex.sets?.[0]?.weight || 60}кг</span>
+                </button>
                 <button data-db-id="${ex.dbId || ''}" data-name="${ex.name}" class="btn-open-tech-dialog tap-btn btn-dark p-2 rounded-xl text-cyan-400 text-xs font-bold" title="Видео и техника">
                   <span>🎬</span>
                 </button>
@@ -2838,9 +2893,10 @@
                       <button data-ex="${exIdx}" data-set="${setIdx}" data-delta="2.5" class="btn-step-weight tap-btn btn-dark w-7 h-7 rounded-lg text-xs font-mono font-bold shrink-0">+</button>
                     </div>
 
-                    <!-- Reps input -->
-                    <div class="col-span-3 flex items-center gap-1">
+                    <!-- Reps input with live 1RM estimate -->
+                    <div class="col-span-3 flex flex-col items-center justify-center">
                       <input type="number" step="1" value="${set.reps}" data-ex="${exIdx}" data-set="${setIdx}" class="inp-set-reps w-full text-center bg-zinc-900 border border-zinc-700 rounded-lg py-1 text-sm font-black text-white font-mono focus:outline-none focus:border-cyan-400" placeholder="0">
+                      ${set.weight > 0 && set.reps > 1 ? `<span class="text-[8px] font-mono font-bold text-cyan-400/90 mt-0.5">1RM: ${Math.round(set.weight * (1 + set.reps / 30))} кг</span>` : ''}
                     </div>
 
                     <!-- Checkmark button -->
@@ -2874,6 +2930,17 @@
       }).join('');
 
       // Wire up set inputs
+      container.querySelectorAll('.btn-quick-ex-plates').forEach(btn => {
+        btn.onclick = () => {
+          playTapSound();
+          const wt = parseFloat(btn.getAttribute('data-weight')) || 60;
+          const inpTarget = document.getElementById('inp-quick-target-wt');
+          if (inpTarget) inpTarget.value = wt;
+          updateQuickPlateCalc();
+          document.getElementById('modal-plate-tools')?.classList.remove('hidden');
+        };
+      });
+
       container.querySelectorAll('.btn-step-weight').forEach(b => {
         b.onclick = () => {
           playTapSound();
@@ -3509,35 +3576,9 @@
       document.getElementById('label-target-protein-grams').textContent = `${Math.round(bw * 2)} г/день`;
     }
 
-    // --- 11. TECHNIQUE MODAL ---
+    // --- 11. TECHNIQUE MODAL & PLATE CALCULATOR ---
     let currentTechExercise = null;
-    function openTechniqueModal(exercise) {
-      currentTechExercise = exercise;
-      document.getElementById('label-tech-title-text').textContent = exercise.name;
-      document.getElementById('label-tech-muscle-tag').textContent = `${exercise.muscle} • ${exercise.type}`;
-
-      const q = encodeURIComponent((exercise.videoQuery || exercise.name) + ' ddx fitness техника');
-      document.getElementById('link-youtube-video').href = `https://www.youtube.com/results?search_query=${q}`;
-
-      document.getElementById('wrapper-target-muscles-tags').innerHTML = (exercise.primaryMuscles || [exercise.muscle]).map(m => `
-        <span class="px-2 py-0.5 rounded-lg bg-zinc-800 text-cyan-300 font-bold text-[11px] border border-zinc-700">${m}</span>
-      `).join('');
-
-      document.getElementById('wrapper-technique-steps-list').innerHTML = (exercise.steps || []).map((step, idx) => `
-        <div class="flex items-start gap-2">
-          <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">${idx + 1}</span>
-          <span>${step}</span>
-        </div>
-      `).join('');
-
-      document.getElementById('wrapper-technique-mistakes-list').innerHTML = (exercise.mistakes || []).map(m => `<div>• ${m}</div>`).join('');
-
-      document.getElementById('modal-technique').classList.remove('hidden');
-    }
-
-    // --- 12. PLATE CALCULATOR ---
-    
-        function updateQuickPlateCalc() {
+    function updateQuickPlateCalc() {
       const targetWt = parseFloat(document.getElementById('inp-quick-target-wt')?.value) || 0;
       const barWt = parseFloat(document.getElementById('select-quick-bar-type')?.value) || 20;
       const sideWtLabel = document.getElementById('label-quick-side-wt');
@@ -4938,6 +4979,8 @@ ${JSON.stringify({ type: 'add_note', data: { text: noteText } }, null, 2)}
           playFanfareSound();
           triggerParticleBurst(window.innerWidth / 2, window.innerHeight / 2);
           showToast('⏰ Время отдыха вышло! Пора на следующий подход!');
+          playFanfareSound();
+          if (navigator.vibrate) try { navigator.vibrate([200, 100, 200, 100, 400]); } catch(e) {}
           const finInd = document.getElementById('timer-active-indicator');
           if (finInd) {
             finInd.textContent = 'ФИНИШ!';
@@ -4970,14 +5013,26 @@ ${JSON.stringify({ type: 'add_note', data: { text: noteText } }, null, 2)}
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      console.log('IronLog DDX: Initializing Ultra-Reliable Master Engine v4.0...');
       loadState();
 
-      // Bottom Navigation
+      // Safe Listener Binder (Zero Crash Guarantee)
+      const safeClick = (id, fn) => {
+        const el = document.getElementById(id);
+        if (el) el.onclick = fn;
+      };
+
+      const safeOn = (id, evt, fn) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener(evt, fn);
+      };
+
+      // 1. BOTTOM NAVIGATION TABS
       document.querySelectorAll('.bottom-tab-btn').forEach(btn => {
         btn.onclick = () => switchTab(btn.getAttribute('data-nav-target'));
       });
 
-      // Duration selector pills for User Split
+      // 2. DURATION SELECTOR PILLS
       document.querySelectorAll('#split-duration-pills .duration-pill').forEach(pill => {
         pill.onclick = () => {
           playTapSound();
@@ -4995,103 +5050,188 @@ ${JSON.stringify({ type: 'add_note', data: { text: noteText } }, null, 2)}
         };
       });
 
-      // Top Actions
-      document.getElementById('btn-open-calendar-top').onclick = () => switchTab('calendar');
-      document.getElementById('btn-open-all-workouts-history').onclick = () => switchTab('calendar');
+      // 3. TOP BAR ACTIONS
+      safeClick('btn-open-calendar-top', () => switchTab('calendar'));
+      safeClick('btn-open-all-workouts-history', () => switchTab('calendar'));
+      safeClick('btn-start-blank-session', () => startWorkout('Свободная тренировка в зале DDX', []));
+      safeClick('btn-start-empty-workout', () => startWorkout('Свободная тренировка в зале DDX', []));
 
-      document.getElementById('btn-open-tools-modal').onclick = () => {
+      // 4. BARBELL PLATE CALCULATOR
+      safeClick('btn-open-tools-modal', () => {
         playTapSound();
         updateQuickPlateCalc();
-        document.getElementById('modal-plate-tools').classList.remove('hidden');
-      };
-      document.getElementById('btn-close-tools-modal').onclick = () => {
-        document.getElementById('modal-plate-tools').classList.add('hidden');
-      };
-      document.getElementById('inp-quick-target-wt').oninput = updateQuickPlateCalc;
-      document.getElementById('select-quick-bar-type').onchange = updateQuickPlateCalc;
+        document.getElementById('modal-plate-tools')?.classList.remove('hidden');
+      });
+      safeClick('btn-close-tools-modal', () => {
+        document.getElementById('modal-plate-tools')?.classList.add('hidden');
+      });
+      safeOn('inp-quick-target-wt', 'input', updateQuickPlateCalc);
+      safeOn('select-quick-bar-type', 'change', updateQuickPlateCalc);
 
-      // Nickname Editor
-      document.getElementById('btn-edit-nickname').onclick = () => {
+      // 5. NICKNAME EDITOR
+      safeClick('btn-edit-nickname', () => {
         playTapSound();
-        document.getElementById('inp-new-nickname').value = appState.nickname || 'Атлет DDX';
-        document.getElementById('modal-nickname-editor').classList.remove('hidden');
-      };
-      document.getElementById('btn-close-nickname-dialog').onclick = () => {
-        document.getElementById('modal-nickname-editor').classList.add('hidden');
-      };
-      document.getElementById('btn-submit-new-nickname').onclick = () => {
+        const inp = document.getElementById('inp-new-nickname');
+        if (inp) inp.value = appState.nickname || 'Атлет DDX';
+        document.getElementById('modal-nickname-editor')?.classList.remove('hidden');
+      });
+      safeClick('btn-close-nickname-dialog', () => {
+        document.getElementById('modal-nickname-editor')?.classList.add('hidden');
+      });
+      safeClick('btn-submit-new-nickname', () => {
         playTapSound();
-        const n = document.getElementById('inp-new-nickname').value.trim();
+        const n = document.getElementById('inp-new-nickname')?.value.trim();
         if (n) {
           appState.nickname = n;
           saveState();
-          document.getElementById('label-user-nickname').textContent = n;
-          document.getElementById('modal-nickname-editor').classList.add('hidden');
+          const lbl = document.getElementById('label-user-nickname');
+          if (lbl) lbl.textContent = n;
+          document.getElementById('modal-nickname-editor')?.classList.add('hidden');
           showToast(`Никнейм изменен: ${n}`);
         }
-      };
+      });
 
-      // Calendar month buttons
-      document.getElementById('btn-cal-prev-month').onclick = () => {
+      // 6. CALENDAR NAVIGATION & SCHEDULING
+      safeClick('btn-cal-prev-month', () => {
         playTapSound();
         calendarDate.setMonth(calendarDate.getMonth() - 1);
         renderCalendarTab();
-      };
-      document.getElementById('btn-cal-next-month').onclick = () => {
+      });
+      safeClick('btn-cal-next-month', () => {
         playTapSound();
         calendarDate.setMonth(calendarDate.getMonth() + 1);
         renderCalendarTab();
-      };
-
-      // Start Blank Workout
-      document.getElementById('btn-start-blank-session').onclick = () => startWorkout('Тренировка в зале', []);
-
-      // Active Workout Session Buttons
-      document.getElementById('btn-open-picker-from-active').onclick = openPickerModal;
-      document.getElementById('btn-finish-active-workout').onclick = finishWorkout;
-      document.getElementById('btn-cancel-active-workout').onclick = () => {
+      });
+      safeClick('btn-open-schedule-modal', () => {
         playTapSound();
-        clearInterval(activeSessionClock);
-        clearInterval(restCountdownTimer);
-        document.getElementById('dynamic-island-banner').classList.add('hidden');
-        appState.activeWorkout = null;
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const inpD = document.getElementById('inp-schedule-date');
+        if (inpD) inpD.value = tomorrow.toISOString().slice(0, 10);
+        document.getElementById('modal-schedule-workout')?.classList.remove('hidden');
+      });
+      safeClick('btn-close-schedule-modal', () => {
+        document.getElementById('modal-schedule-workout')?.classList.add('hidden');
+      });
+      safeClick('btn-submit-schedule', () => {
+        playTapSound();
+        const splitTitle = document.getElementById('select-schedule-split')?.value || 'День 1: Грудь + Бицепс';
+        const dateVal = document.getElementById('inp-schedule-date')?.value;
+        const timeVal = document.getElementById('inp-schedule-time')?.value || '18:30';
+        const notesVal = document.getElementById('inp-schedule-notes')?.value || '';
+
+        if (!dateVal) {
+          showToast('Выберите дату тренировки');
+          return;
+        }
+
+        appState.plannedWorkouts = appState.plannedWorkouts || [];
+        appState.plannedWorkouts.push({
+          id: 'plan_' + Date.now(),
+          title: splitTitle,
+          dateKey: dateVal,
+          time: timeVal,
+          notes: notesVal
+        });
+
         saveState();
-        renderWorkoutTab();
-        showToast('Тренировка отменена');
-      };
+        document.getElementById('modal-schedule-workout')?.classList.add('hidden');
+        renderCalendarTab();
+        playFanfareSound();
+        triggerParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 25);
+        showToast(`📅 «${splitTitle}» запланирована на ${dateVal} (${timeVal})!`);
+      });
 
-      // Island buttons
-      document.getElementById('btn-island-add-30s').onclick = () => {
+      // 7. THEMES MODAL
+      const modalTheme = document.getElementById('modal-theme-picker');
+      safeClick('btn-open-theme-modal', () => {
         playTapSound();
-        restSecondsLeft += 30;
-        document.getElementById('island-rest-countdown-text').textContent = `Отдых: ${restSecondsLeft}с`;
-      };
-      document.getElementById('btn-island-finish-workout').onclick = finishWorkout;
+        modalTheme?.classList.remove('hidden');
+      });
+      safeClick('btn-close-theme-modal', () => {
+        modalTheme?.classList.add('hidden');
+      });
+      document.querySelectorAll('#theme-options-grid .theme-card').forEach(card => {
+        card.onclick = () => {
+          const thName = card.getAttribute('data-theme');
+          applyTheme(thName);
+          playTapSound();
+          triggerParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 30);
+          showToast(`🎨 Стиль «${card.querySelector('span')?.textContent || thName}» активирован!`);
+          setTimeout(() => modalTheme?.classList.add('hidden'), 250);
+        };
+      });
 
-      // Picker modal
-      
-      // Custom Exercise ("Своими словами") submit handler
-      
-      // Custom Exercise ("Своими словами") submit handler - 100% BUG FREE
-      document.getElementById('btn-submit-custom-exercise').onclick = () => {
+      // 8. SYNC CENTER MODAL
+      const modalSync = document.getElementById('modal-sync-center');
+      safeClick('btn-open-sync-modal', () => {
+        playTapSound();
+        modalSync?.classList.remove('hidden');
+      });
+      safeClick('btn-close-sync-modal', () => {
+        modalSync?.classList.add('hidden');
+      });
+      safeClick('tab-btn-sync-cloud', () => switchSyncTab('cloud'));
+      safeClick('tab-btn-sync-file', () => switchSyncTab('file'));
+      safeClick('tab-btn-sync-code', () => switchSyncTab('code'));
+      safeClick('btn-push-to-cloud', () => pushAppStateToCloud());
+      safeClick('btn-pull-from-cloud', () => pullAppStateFromCloud());
+      safeClick('btn-generate-random-pin', () => {
+        playTapSound();
+        const pin = 'DDX-' + Math.floor(Math.random() * 899 + 100);
+        const inp = document.getElementById('inp-sync-pin');
+        if (inp) inp.value = pin;
+        appState.syncPin = pin;
+        saveState();
+        showToast(`Сгенерирован PIN: ${pin}`);
+      });
+      safeClick('btn-download-backup-file', () => exportDataAsJsonFile());
+      safeClick('btn-apply-direct-file-text', () => {
+        const area = document.getElementById('area-sync-code-import');
+        if (area && area.value) applyImportedStateText(area.value);
+      });
+      safeClick('btn-copy-sync-code', () => {
+        playTapSound();
+        const area = document.getElementById('area-sync-code-export');
+        if (area) {
+          area.select();
+          navigator.clipboard?.writeText(area.value);
+          showToast('✅ Код данных скопирован!');
+        }
+      });
+      safeClick('btn-paste-clipboard-into-input', async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          const area = document.getElementById('area-sync-code-import');
+          if (area) {
+            area.value = text;
+            showToast('Вставлено из буфера!');
+          }
+        } catch(e) {
+          showToast('Нажмите в поле и выберите «Вставить»');
+        }
+      });
+      safeClick('btn-apply-sync-code', () => {
+        const area = document.getElementById('area-sync-code-import');
+        if (area && area.value) applyImportedStateText(area.value);
+      });
+
+      // 9. EXERCISE CATALOG & PICKER
+      safeClick('btn-close-picker-modal', () => {
+        document.getElementById('modal-exercise-picker')?.classList.add('hidden');
+      });
+      safeOn('inp-picker-search-field', 'input', renderPickerModalList);
+      safeClick('btn-submit-custom-exercise', () => {
         playTapSound();
         const inp = document.getElementById('inp-custom-exercise-name');
         const sel = document.getElementById('select-custom-exercise-muscle');
-        const name = (inp ? inp.value : '').trim();
-        const muscle = sel ? sel.value : 'Грудь';
-
+        const name = inp?.value.trim();
+        const muscle = sel?.value || 'Грудь';
         if (!name) {
           showToast('Введите название упражнения');
           return;
         }
-
-        playChordChime();
-        triggerParticleBurst(window.innerWidth / 2, 220);
-
-        if (!appState.activeWorkout) {
-          startWorkout('Тренировка в зале', []);
-        }
-
+        if (!appState.activeWorkout) startWorkout('Свободная тренировка', []);
         appState.activeWorkout.exercises.push({
           id: 'we_custom_' + Date.now(),
           dbId: 'custom_' + Date.now(),
@@ -5103,64 +5243,19 @@ ${JSON.stringify({ type: 'add_note', data: { text: noteText } }, null, 2)}
             { id: 's3', weight: 40, reps: 10, done: false }
           ]
         });
-
         if (inp) inp.value = '';
         saveState();
         renderActiveExercises();
         updateActiveMetrics();
-
-        const modal = document.getElementById('modal-exercise-picker');
-        if (modal) modal.classList.add('hidden');
-
-        showToast('«' + name + '» добавлено в тренировку!');
-      };
-
-
-
-      document.getElementById('btn-close-picker-modal').onclick = () => {
-        document.getElementById('modal-exercise-picker').classList.add('hidden');
-      };
-      document.getElementById('inp-picker-search-field').oninput = renderPickerModalList;
-
-      document.querySelectorAll('.picker-pill-item').forEach(p => {
-        p.onclick = () => {
-          playTapSound();
-          document.querySelectorAll('.picker-pill-item').forEach(x => {
-            x.classList.remove('active', 'text-zinc-950');
-            x.style.background = '';
-            x.classList.add('bg-zinc-800', 'text-zinc-300');
-          });
-          p.classList.add('active', 'text-zinc-950');
-          p.style.background = 'var(--btn-grad)';
-          p.classList.remove('bg-zinc-800', 'text-zinc-300');
-          pickerFilterGroup = p.getAttribute('data-pick');
-          renderPickerModalList();
-        };
+        document.getElementById('modal-exercise-picker')?.classList.add('hidden');
+        showToast(`«${name}» добавлено в тренировку!`);
       });
 
-      // Catalog category pills
-      document.querySelectorAll('#catalog-category-filter-pills .cat-pill-btn').forEach(p => {
-        p.onclick = () => {
-          playTapSound();
-          document.querySelectorAll('#catalog-category-filter-pills .cat-pill-btn').forEach(x => {
-            x.classList.remove('active', 'text-zinc-950', 'shadow-md');
-            x.style.background = '';
-            x.classList.add('bg-zinc-900', 'border', 'border-zinc-800', 'text-zinc-400');
-          });
-          p.classList.add('active', 'text-zinc-950', 'shadow-md');
-          p.style.background = 'var(--btn-grad)';
-          p.classList.remove('bg-zinc-900', 'border', 'border-zinc-800', 'text-zinc-400');
-          currentCatalogCat = p.getAttribute('data-cat');
-          renderCatalog();
-        };
+      // 10. TECHNIQUE MODAL
+      safeClick('btn-close-technique-modal', () => {
+        document.getElementById('modal-technique')?.classList.add('hidden');
       });
-      document.getElementById('inp-catalog-search').oninput = renderCatalog;
-
-      // Technique modal
-      document.getElementById('btn-close-technique-modal').onclick = () => {
-        document.getElementById('modal-technique').classList.add('hidden');
-      };
-      document.getElementById('btn-add-exercise-from-tech').onclick = () => {
+      safeClick('btn-add-exercise-from-tech', () => {
         playTapSound();
         if (!currentTechExercise) return;
         if (!appState.activeWorkout) {
@@ -5182,99 +5277,76 @@ ${JSON.stringify({ type: 'add_note', data: { text: noteText } }, null, 2)}
           switchTab('workout');
           showToast(`«${currentTechExercise.name}» добавлено!`);
         }
-        document.getElementById('modal-technique').classList.add('hidden');
-      };
+        document.getElementById('modal-technique')?.classList.add('hidden');
+      });
 
-      // 1RM Record Modal (Pure Manual)
-      document.getElementById('btn-open-record-dialog').onclick = () => {
+      // 11. 1RM RECORD MODAL
+      safeClick('btn-open-record-dialog', () => {
         playTapSound();
         const select = document.getElementById('select-record-ex-name');
-        select.innerHTML = DDX_DATABASE.map(ex => `<option value="${ex.name}">${ex.name} (${ex.muscle})</option>`).join('');
-        document.getElementById('inp-record-date-val').value = new Date().toISOString().slice(0, 10);
-        document.getElementById('modal-add-record').classList.remove('hidden');
-      };
-      document.getElementById('btn-close-record-dialog').onclick = () => {
-        document.getElementById('modal-add-record').classList.add('hidden');
-      };
-      document.getElementById('btn-submit-record-save').onclick = () => {
+        if (select) {
+          select.innerHTML = DDX_DATABASE.map(ex => `<option value="${ex.name}">${ex.name} (${ex.muscle})</option>`).join('');
+        }
+        const inpD = document.getElementById('inp-record-date-val');
+        if (inpD) inpD.value = new Date().toISOString().slice(0, 10);
+        document.getElementById('modal-add-record')?.classList.remove('hidden');
+      });
+      safeClick('btn-close-record-dialog', () => {
+        document.getElementById('modal-add-record')?.classList.add('hidden');
+      });
+      safeClick('btn-submit-record-save', () => {
         playTapSound();
-        const exName = document.getElementById('select-record-ex-name').value;
-        const wt = parseFloat(document.getElementById('inp-record-weight-val').value) || 0;
-        const dateStr = document.getElementById('inp-record-date-val').value || new Date().toISOString().slice(0, 10);
-        const notes = document.getElementById('inp-record-notes-val').value.trim();
+        const exName = document.getElementById('select-record-ex-name')?.value;
+        const wt = parseFloat(document.getElementById('inp-record-weight-val')?.value);
+        const dt = document.getElementById('inp-record-date-val')?.value || new Date().toISOString().slice(0, 10);
+        const notes = document.getElementById('inp-record-notes-val')?.value || '';
 
-        if (wt <= 0) {
-          showToast('Введите вес рекорда');
+        if (!exName || isNaN(wt) || wt <= 0) {
+          showToast('Укажите корректный вес рекорда');
           return;
         }
 
+        appState.records1RM = appState.records1RM || [];
         appState.records1RM.unshift({
           id: 'rec_' + Date.now(),
           exName: exName,
+          exerciseName: exName,
           weight: wt,
-          date: dateStr,
+          date: dt,
           notes: notes
         });
-
         saveState();
-        document.getElementById('modal-add-record').classList.add('hidden');
+        document.getElementById('modal-add-record')?.classList.add('hidden');
         renderRecordsTab();
-        showToast(`🏆 Рекорд в «${exName}» (${wt} кг) зафиксирован!`);
-      };
+        playFanfareSound();
+        triggerParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 35);
+        showToast(`🏆 Новый рекорд: ${exName} — ${wt} кг!`);
+      });
 
-      // Custom System Builder
-      document.getElementById('btn-open-create-custom-system').onclick = () => {
+      // 12. BODY MEASUREMENTS (12 ZONES)
+      safeClick('btn-save-bm-submit', () => {
         playTapSound();
-        document.getElementById('modal-create-custom-system').classList.remove('hidden');
-      };
-      document.getElementById('btn-close-custom-system-dialog').onclick = () => {
-        document.getElementById('modal-create-custom-system').classList.add('hidden');
-      };
-      document.getElementById('btn-submit-custom-system').onclick = () => {
-        playTapSound();
-        const name = document.getElementById('inp-custom-sys-title').value.trim() || 'Мой Сплит';
-        const d1 = document.getElementById('inp-custom-sys-d1').value.trim() || 'Грудь и Бицепс';
-        const d2 = document.getElementById('inp-custom-sys-d2').value.trim() || 'Спина и Плечи';
-        const d3 = document.getElementById('inp-custom-sys-d3').value.trim() || 'Трицепс и Предплечья';
-
-        appState.customSystems.unshift({
-          id: 'sys_' + Date.now(),
-          name: name,
-          days: [
-            { title: d1, exIds: ['ddx_1', 'ddx_2', 'ddx_35'] },
-            { title: d2, exIds: ['ddx_13', 'ddx_15', 'ddx_25'] },
-            { title: d3, exIds: ['ddx_36', 'ddx_37', 'ddx_43'] }
-          ]
-        });
-
-        saveState();
-        document.getElementById('modal-create-custom-system').classList.add('hidden');
-        showToast('Система тренировок сохранена!');
-      };
-
-      // Measurements Save Button
-      document.getElementById('btn-save-bm-submit').onclick = () => {
-        playTapSound();
-        const wt = parseFloat(document.getElementById('bm-weight-input').value) || null;
-        const fat = parseFloat(document.getElementById('bm-fat-input').value) || null;
-        const neck = parseFloat(document.getElementById('bm-neck-input').value) || null;
-        const sh = parseFloat(document.getElementById('bm-shoulders-input').value) || null;
-        const ch = parseFloat(document.getElementById('bm-chest-input').value) || null;
-        const biL = parseFloat(document.getElementById('bm-biceps-l-input').value) || null;
-        const biR = parseFloat(document.getElementById('bm-biceps-r-input').value) || null;
-        const fa = parseFloat(document.getElementById('bm-forearm-input').value) || null;
-        const wst = parseFloat(document.getElementById('bm-waist-input').value) || null;
-        const bl = parseFloat(document.getElementById('bm-belly-input').value) || null;
-        const gl = parseFloat(document.getElementById('bm-glutes-input').value) || null;
-        const thL = parseFloat(document.getElementById('bm-thigh-l-input').value) || null;
-        const thR = parseFloat(document.getElementById('bm-thigh-r-input').value) || null;
-        const calf = parseFloat(document.getElementById('bm-calf-input').value) || null;
+        const wt = parseFloat(document.getElementById('bm-weight-input')?.value) || null;
+        const fat = parseFloat(document.getElementById('bm-fat-input')?.value) || null;
+        const neck = parseFloat(document.getElementById('bm-neck-input')?.value) || null;
+        const sh = parseFloat(document.getElementById('bm-shoulders-input')?.value) || null;
+        const ch = parseFloat(document.getElementById('bm-chest-input')?.value) || null;
+        const biL = parseFloat(document.getElementById('bm-biceps-l-input')?.value) || null;
+        const biR = parseFloat(document.getElementById('bm-biceps-r-input')?.value) || null;
+        const fa = parseFloat(document.getElementById('bm-forearm-input')?.value) || null;
+        const wst = parseFloat(document.getElementById('bm-waist-input')?.value) || null;
+        const bl = parseFloat(document.getElementById('bm-belly-input')?.value) || null;
+        const gl = parseFloat(document.getElementById('bm-glutes-input')?.value) || null;
+        const thL = parseFloat(document.getElementById('bm-thigh-l-input')?.value) || null;
+        const thR = parseFloat(document.getElementById('bm-thigh-r-input')?.value) || null;
+        const calf = parseFloat(document.getElementById('bm-calf-input')?.value) || null;
 
         if (!wt && !wst && !ch && !biR) {
           showToast('Введите вес или хотя бы один замер');
           return;
         }
 
+        appState.bodyLogs = appState.bodyLogs || [];
         appState.bodyLogs.unshift({
           date: new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }),
           timestamp: Date.now(),
@@ -5293,729 +5365,276 @@ ${JSON.stringify({ type: 'add_note', data: { text: noteText } }, null, 2)}
           thighR: thR,
           calf: calf
         });
-
         saveState();
         renderMeasurementsTab();
-        showToast('Замеры тела зафиксированы!');
-      };
+        playFanfareSound();
+        triggerParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 25);
+        showToast('📏 Замеры 12 зон успешно сохранены!');
+      });
 
-      // Nutrition Buttons
-      document.getElementById('btn-nutr-creatine-add5').onclick = () => {
+      // 13. NUTRITION & WATER TRACKER
+      safeClick('btn-nutr-creatine-add5', () => {
         playTapSound();
-        appState.creatine.todayGrams = Math.min(20, appState.creatine.todayGrams + 5);
+        appState.creatine = appState.creatine || { todayGrams: 0, waterMl: 0, lastDate: new Date().toISOString().slice(0, 10) };
+        appState.creatine.todayGrams = 5;
         saveState();
         renderNutritionTab();
         renderWorkoutTab();
-        showToast('5г креатина принято! Отличная работа.');
-      };
-      document.getElementById('btn-nutr-creatine-reset').onclick = () => {
+        playFanfareSound();
+        showToast('💊 Дневная норма креатина (5г) принята!');
+      });
+      safeClick('btn-nutr-creatine-reset', () => {
         playTapSound();
+        appState.creatine = appState.creatine || { todayGrams: 0, waterMl: 0, lastDate: new Date().toISOString().slice(0, 10) };
         appState.creatine.todayGrams = 0;
         saveState();
         renderNutritionTab();
         renderWorkoutTab();
-      };
-      document.getElementById('btn-nutr-water-plus250').onclick = () => {
+        showToast('Норма креатина сброшена');
+      });
+      safeClick('btn-nutr-water-plus250', () => {
         playTapSound();
-        appState.creatine.waterMl += 250;
+        appState.creatine = appState.creatine || { todayGrams: 0, waterMl: 0, lastDate: new Date().toISOString().slice(0, 10) };
+        appState.creatine.waterMl = (appState.creatine.waterMl || 0) + 250;
         saveState();
         renderNutritionTab();
-      };
-      document.getElementById('btn-nutr-water-plus500').onclick = () => {
+        renderWorkoutTab();
+        showToast(`💧 +250 мл воды! Всего: ${appState.creatine.waterMl} мл`);
+      });
+      safeClick('btn-nutr-water-plus500', () => {
         playTapSound();
-        appState.creatine.waterMl += 500;
+        appState.creatine = appState.creatine || { todayGrams: 0, waterMl: 0, lastDate: new Date().toISOString().slice(0, 10) };
+        appState.creatine.waterMl = (appState.creatine.waterMl || 0) + 500;
         saveState();
         renderNutritionTab();
-      };
-
-      // Initial Render
-      
-      // Global Touch & Click Ripple Wave on all .tap-btn elements
-      document.addEventListener('click', (e) => {
-        const btn = e.target.closest('.tap-btn');
-        if (btn) {
-          const rect = btn.getBoundingClientRect();
-          const ripple = document.createElement('span');
-          ripple.className = 'btn-ripple';
-          const diameter = Math.max(rect.width, rect.height);
-          const radius = diameter / 2;
-          ripple.style.width = ripple.style.height = `${diameter}px`;
-          ripple.style.left = `${e.clientX - rect.left - radius}px`;
-          ripple.style.top = `${e.clientY - rect.top - radius}px`;
-          btn.appendChild(ripple);
-          setTimeout(() => ripple.remove(), 550);
-        }
+        renderWorkoutTab();
+        showToast(`💧 +500 мл воды! Всего: ${appState.creatine.waterMl} мл`);
       });
 
-      
-      // Coach AI Send Button & Enter Key
+      // Quick top-strip water/creatine
+      safeClick('btn-quick-add-water', () => {
+        playTapSound();
+        appState.creatine = appState.creatine || { todayGrams: 0, waterMl: 0, lastDate: new Date().toISOString().slice(0, 10) };
+        appState.creatine.waterMl = (appState.creatine.waterMl || 0) + 250;
+        saveState();
+        const lbl = document.getElementById('label-quick-water-count');
+        if (lbl) lbl.textContent = `Вода: ${appState.creatine.waterMl} мл`;
+        showToast(`💧 +250 мл воды! (${appState.creatine.waterMl} мл)`);
+      });
+      safeClick('btn-quick-add-creatine', () => {
+        playTapSound();
+        appState.creatine = appState.creatine || { todayGrams: 0, waterMl: 0, lastDate: new Date().toISOString().slice(0, 10) };
+        appState.creatine.todayGrams = 5;
+        saveState();
+        renderWorkoutTab();
+        playFanfareSound();
+        showToast('💊 Креатин 5г зафиксирован!');
+      });
+
+      // 14. STANDALONE TIMER TAB
+      safeClick('btn-timer-sub-15', () => {
+        playTapSound();
+        tabTimerSecondsLeft = Math.max(0, tabTimerSecondsLeft - 15);
+        updateTabTimerDisplay();
+      });
+      safeClick('btn-timer-toggle-play', () => {
+        playTapSound();
+        if (tabTimerIsRunning) pauseTabTimer();
+        else startTabTimer();
+      });
+      safeClick('btn-timer-add-30', () => {
+        playTapSound();
+        tabTimerSecondsLeft += 30;
+        tabTimerTotalSeconds += 30;
+        updateTabTimerDisplay();
+      });
+      safeClick('btn-timer-reset', () => {
+        playTapSound();
+        resetTabTimer();
+      });
+
+      // 15. ACTIVE WORKOUT CONTROLS
+      safeClick('btn-cancel-active-workout', () => {
+        if (confirm('Отменить текущую тренировку?')) {
+          appState.activeWorkout = null;
+          clearInterval(activeSessionClock);
+          clearInterval(restCountdownTimer);
+          saveState();
+          renderWorkoutTab();
+          showToast('Тренировка отменена');
+        }
+      });
+      safeClick('btn-finish-active-workout', () => finishWorkout());
+      safeClick('btn-island-finish-workout', () => finishWorkout());
+      safeClick('btn-island-add-30s', () => {
+        playTapSound();
+        restSecondsLeft += 30;
+        const rTxt = document.getElementById('island-rest-countdown-text');
+        if (rTxt) rTxt.textContent = `Отдых: ${restSecondsLeft}с`;
+      });
+      safeClick('btn-open-picker-from-active', () => {
+        playTapSound();
+        renderPickerModalList();
+        document.getElementById('modal-exercise-picker')?.classList.remove('hidden');
+      });
+
+      // 16. COACH CHAT (WITH DUAL POINTERDOWN + ENTER SEND!)
+      const executeCoachSend = () => {
+        const inp = document.getElementById('inp-coach-query');
+        if (!inp) return;
+        const text = inp.value;
+        if (!text.trim() && !currentCoachAttachmentBase64) return;
+        sendCoachMessage(text);
+      };
+
       const btnCoach = document.getElementById('btn-coach-send');
       if (btnCoach) {
-        btnCoach.onclick = () => {
-          const text = document.getElementById('inp-coach-query').value;
-          sendCoachMessage(text);
-        };
+        btnCoach.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          executeCoachSend();
+        });
+        btnCoach.addEventListener('click', (e) => {
+          e.preventDefault();
+          executeCoachSend();
+        });
       }
 
       const inpCoach = document.getElementById('inp-coach-query');
       if (inpCoach) {
-        inpCoach.onkeydown = (e) => {
+        inpCoach.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
-            const text = e.target.value;
-            sendCoachMessage(text);
+            e.preventDefault();
+            executeCoachSend();
           }
-        };
+        });
       }
 
-      document.querySelectorAll('#coach-prompt-chips .coach-chip').forEach(chip => {
-        chip.onclick = () => {
-          const promptText = chip.getAttribute('data-prompt');
-          document.getElementById('inp-coach-query').value = promptText;
-          sendCoachMessage(promptText);
-        };
+      safeClick('btn-clear-coach-chat', () => {
+        if (confirm('Очистить историю диалога с тренером?')) {
+          appState.coachChatHistory = [];
+          saveState();
+          renderCoachChatHistory();
+          showToast('Чат с тренером очищен');
+        }
       });
 
-      
-      // Coach API Settings Modal
-      const btnOpenApi = document.getElementById('btn-open-coach-api-settings');
-      if (btnOpenApi) {
-        btnOpenApi.onclick = () => {
-          playTapSound();
-          const provSelect = document.getElementById('coach-api-provider');
-          const keyInp = document.getElementById('inp-coach-api-key');
-          if (provSelect) provSelect.value = appState.coachApiProvider || 'free';
-          if (keyInp) keyInp.value = appState.coachApiKey || '';
-
-          const wrap = document.getElementById('wrapper-api-key-input');
-          if (wrap) {
-            wrap.classList.toggle('hidden', provSelect.value === 'free');
-          }
-          document.getElementById('modal-coach-api').classList.remove('hidden');
-        };
-      }
-
-      const btnCloseApi = document.getElementById('btn-close-coach-api');
-      if (btnCloseApi) {
-        btnCloseApi.onclick = () => {
-          document.getElementById('modal-coach-api').classList.add('hidden');
-        };
-      }
-
-      const provSelect = document.getElementById('coach-api-provider');
-      if (provSelect) {
-        provSelect.onchange = (e) => {
-          const wrap = document.getElementById('wrapper-api-key-input');
-          if (wrap) wrap.classList.toggle('hidden', e.target.value === 'free');
-        };
-      }
-
-      const btnSaveApi = document.getElementById('btn-save-coach-api');
-      if (btnSaveApi) {
-        btnSaveApi.onclick = () => {
-          playChordChime();
-          const p = document.getElementById('coach-api-provider').value;
-          const k = document.getElementById('inp-coach-api-key').value.trim();
-          appState.coachApiProvider = p;
-          appState.coachApiKey = k;
-          saveState();
-          document.getElementById('modal-coach-api').classList.add('hidden');
-          showToast('Настройки нейросети сохранены!');
-        };
-      }
-
-            // Coach Notes Drawer & Manual Note Input
-      const btnToggleNotes = document.getElementById('btn-toggle-coach-notes');
-      if (btnToggleNotes) {
-        btnToggleNotes.onclick = () => {
-          playTapSound();
-          const p = document.getElementById('panel-coach-notes');
-          if (p) {
-            p.classList.toggle('hidden');
-            renderCoachNotes();
-          }
-        };
-      }
-
-      const btnAddNote = document.getElementById('btn-add-manual-coach-note');
-      if (btnAddNote) {
-        btnAddNote.onclick = () => {
-          const inp = document.getElementById('inp-manual-coach-note');
-          const txt = inp ? inp.value.trim() : '';
-          if (txt) {
-            playTapSound();
-            appState.notes = appState.notes || [];
-            appState.notes.unshift({
-              id: 'note_' + Date.now(),
-              date: new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
-              text: txt
-            });
-            saveState();
-            renderCoachNotes();
-            inp.value = '';
-            showToast('Заметка добавлена в блокнот');
-          }
-        };
-      }
-      renderCoachNotes();
-
-      
-      // Multimodal Vision: Photo Attachment Picker
-      const btnAttachPhoto = document.getElementById('btn-attach-coach-photo');
-      const inpPhoto = document.getElementById('inp-coach-photo');
-      const wrapAttach = document.getElementById('wrapper-coach-attached-img');
-      const imgPreview = document.getElementById('img-coach-attachment-preview');
-      const btnRemoveAttach = document.getElementById('btn-remove-coach-attachment');
-
-      if (btnAttachPhoto && inpPhoto) {
-        btnAttachPhoto.onclick = () => inpPhoto.click();
-        inpPhoto.onchange = (e) => {
-          const file = e.target.files && e.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (re) => {
-              currentCoachAttachmentBase64 = re.target.result;
-              if (imgPreview) imgPreview.src = currentCoachAttachmentBase64;
-              if (wrapAttach) wrapAttach.classList.remove('hidden');
-              showToast('📷 Фото прикреплено! Нажмите «Отправить»');
-            };
-            reader.readAsDataURL(file);
-          }
-        };
-      }
-
-      if (btnRemoveAttach) {
-        btnRemoveAttach.onclick = () => {
-          currentCoachAttachmentBase64 = null;
-          if (wrapAttach) wrapAttach.classList.add('hidden');
-          if (inpPhoto) inpPhoto.value = '';
-          showToast('Прикрепленное фото удалено');
-        };
-      }
-
-      // Live Video Camera HUD Stream
-      const btnOpenLiveCam = document.getElementById('btn-open-live-camera');
-      const modalLiveCam = document.getElementById('modal-live-camera');
-      const btnCloseLiveCam = document.getElementById('btn-close-live-camera');
-      const videoCamStream = document.getElementById('video-coach-camera-stream');
-      const btnCaptureFrame = document.getElementById('btn-capture-camera-frame');
-      const canvasCapture = document.getElementById('canvas-coach-frame-capture');
-
-      function stopLiveCamera() {
-        if (liveCameraStream) {
-          liveCameraStream.getTracks().forEach(t => t.stop());
-          liveCameraStream = null;
-        }
-        if (modalLiveCam) modalLiveCam.classList.add('hidden');
-      }
-
-      if (btnOpenLiveCam && modalLiveCam) {
-        btnOpenLiveCam.onclick = async () => {
-          playTapSound();
-          modalLiveCam.classList.remove('hidden');
-          try {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-              liveCameraStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: 'environment' } }
-              });
-              if (videoCamStream) {
-                videoCamStream.srcObject = liveCameraStream;
-              }
-            } else {
-              showToast('Камера не поддерживается вашим браузером');
-            }
-          } catch (camErr) {
-            console.warn('Camera stream error:', camErr);
-            showToast('Нет доступа к камере: проверьте разрешения');
-          }
-        };
-      }
-
-      if (btnCloseLiveCam) btnCloseLiveCam.onclick = stopLiveCamera;
-
-      if (btnCaptureFrame && videoCamStream && canvasCapture) {
-        btnCaptureFrame.onclick = () => {
-          playCameraShutterSound();
-          triggerParticleBurst(window.innerWidth / 2, window.innerHeight / 2);
-          
-          canvasCapture.width = videoCamStream.videoWidth || 640;
-          canvasCapture.height = videoCamStream.videoHeight || 480;
-          const ctx = canvasCapture.getContext('2d');
-          ctx.drawImage(videoCamStream, 0, 0, canvasCapture.width, canvasCapture.height);
-          
-          currentCoachAttachmentBase64 = canvasCapture.toDataURL('image/jpeg', 0.85);
-          if (imgPreview) imgPreview.src = currentCoachAttachmentBase64;
-          if (wrapAttach) wrapAttach.classList.remove('hidden');
-          
-          stopLiveCamera();
-          showToast('📸 Снимок с камеры готов к анализу!');
-        };
-      }
-
-      // Voice Mic Dictation (SpeechRecognition)
-      const btnVoiceMic = document.getElementById('btn-voice-coach-mic');
-      const inpCoachQuery = document.getElementById('inp-coach-query');
-      let isRecordingVoice = false;
-      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-      if (btnVoiceMic && SpeechRec) {
-        const recognition = new SpeechRec();
-        recognition.lang = 'ru-RU';
-        recognition.interimResults = false;
-
-        recognition.onstart = () => {
-          isRecordingVoice = true;
-          btnVoiceMic.classList.add('bg-rose-500/30', 'text-rose-400', 'border-rose-500');
-          showToast('🎙️ Слушаю вопрос... говорите');
-        };
-
-        recognition.onresult = (ev) => {
-          const transcript = ev.results[0][0].transcript;
-          if (inpCoachQuery) {
-            inpCoachQuery.value = transcript;
-            showToast('Голос распознан!');
-          }
-        };
-
-        recognition.onerror = () => {
-          showToast('Не удалось распознать речь');
-        };
-
-        recognition.onend = () => {
-          isRecordingVoice = false;
-          btnVoiceMic.classList.remove('bg-rose-500/30', 'text-rose-400', 'border-rose-500');
-        };
-
-        btnVoiceMic.onclick = () => {
-          playTapSound();
-          if (!isRecordingVoice) {
-            recognition.start();
-          } else {
-            recognition.stop();
-          }
-        };
-      } else if (btnVoiceMic) {
-        btnVoiceMic.onclick = () => showToast('Голосовой ввод не поддерживается в этом браузере');
-      }
-
-      // Coach Profile Modal (Custom Name, Avatar, Style)
-      const btnOpenCoachProf = document.getElementById('btn-open-coach-profile');
-      const btnQuickRename = document.getElementById('btn-quick-rename-coach');
-      const modalCoachProf = document.getElementById('modal-coach-profile');
-      const btnCloseCoachProf = document.getElementById('btn-close-coach-profile');
-      const inpCoachCustomName = document.getElementById('inp-coach-custom-name');
-      const selectCoachStyle = document.getElementById('coach-style-select');
-      const btnSaveCoachProf = document.getElementById('btn-save-coach-profile');
-
-      function openCoachProfileDialog() {
+      // Coach API settings modal
+      safeClick('btn-open-coach-api-settings', () => {
         playTapSound();
-        const p = appState.coachProfile || { name: 'IronCoach', role: 'Элитный наставник DDX', avatar: '🤖', style: 'power',
-        voicePreset: 'google_neural' };
-        if (inpCoachCustomName) inpCoachCustomName.value = p.name || 'IronCoach';
-        if (selectCoachStyle) selectCoachStyle.value = p.style || 'power';
-        document.querySelectorAll('#coach-avatar-selector .avatar-option').forEach(btn => {
-          btn.classList.toggle('border-cyan-400', btn.getAttribute('data-avatar') === p.avatar);
-          btn.onclick = () => {
-            playTapSound();
-            document.querySelectorAll('#coach-avatar-selector .avatar-option').forEach(b => b.classList.remove('border-cyan-400'));
-            btn.classList.add('border-cyan-400');
-            p.avatar = btn.getAttribute('data-avatar');
-          };
-        });
-        if (modalCoachProf) modalCoachProf.classList.remove('hidden');
-      }
-
-      if (btnOpenCoachProf) btnOpenCoachProf.onclick = openCoachProfileDialog;
-      if (btnQuickRename) btnQuickRename.onclick = openCoachProfileDialog;
-      if (btnCloseCoachProf) btnCloseCoachProf.onclick = () => modalCoachProf.classList.add('hidden');
-
-      if (btnSaveCoachProf) {
-        btnSaveCoachProf.onclick = () => {
-          playChordChime();
-          appState.coachProfile = appState.coachProfile || {};
-          const n = inpCoachCustomName ? inpCoachCustomName.value.trim() : '';
-          if (n) appState.coachProfile.name = n;
-          if (selectCoachStyle) {
-            appState.coachProfile.style = selectCoachStyle.value;
-            if (selectCoachStyle.value === 'power') appState.coachProfile.role = 'Элитный наставник DDX';
-            if (selectCoachStyle.value === 'science') appState.coachProfile.role = 'Биомеханик и методист';
-            if (selectCoachStyle.value === 'bro') appState.coachProfile.role = 'Бро-напарник по залу';
-          }
-          saveState();
-          renderCoachProfileHeader();
-          if (modalCoachProf) modalCoachProf.classList.add('hidden');
-          showToast(`Профиль тренера «${appState.coachProfile.name}» обновлен!`);
-        };
-      }
-
-      // Clear Coach Chat Dialog
-      const btnClearChat = document.getElementById('btn-clear-coach-chat');
-      if (btnClearChat) {
-        btnClearChat.onclick = () => {
-          playTapSound();
-          const cont = document.getElementById('coach-messages-container');
-          if (cont) {
-            const curP = appState.coachProfile || { name: 'IronCoach', avatar: '🤖' };
-            cont.innerHTML = `
-              <div class="flex items-start gap-2.5">
-                <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-sm font-bold shrink-0">
-                  ${curP.avatar || '🤖'}
-                </div>
-                <div class="bg-zinc-900/90 border border-zinc-800 p-3 rounded-2xl text-xs text-zinc-200 space-y-1.5 max-w-[85%]">
-                  <div class="font-bold text-emerald-400">${curP.name}:</div>
-                  <p>Диалог очищен! Я готов к новым вопросам по тренировкам, фото тренажеров или спортпита.</p>
-                </div>
-              </div>
-            `;
-            showToast('История диалога с тренером очищена');
-          }
-        };
-      }
-
-      // Initial header render
-      renderCoachProfileHeader();
-
-      
-      // Sync Center Modal & Tabs Listeners
-      const btnOpenSync = document.getElementById('btn-open-sync-modal');
-      const modalSync = document.getElementById('modal-sync-center');
-      const btnCloseSync = document.getElementById('btn-close-sync-modal');
-      
-      const tabBtnCloud = document.getElementById('tab-btn-sync-cloud');
-      const tabBtnFile = document.getElementById('tab-btn-sync-file');
-      const tabBtnCode = document.getElementById('tab-btn-sync-code');
-      const viewCloud = document.getElementById('sync-view-cloud');
-      const viewFile = document.getElementById('sync-view-file');
-      const viewCode = document.getElementById('sync-view-code');
-      
-      const txtExportPreview = document.getElementById('txt-export-data-preview');
-      const txtImportInput = document.getElementById('txt-import-data-input');
-
-      function switchSyncTab(activeTab) {
+        const provSelect = document.getElementById('coach-api-provider');
+        const keyInp = document.getElementById('inp-coach-api-key');
+        if (provSelect) provSelect.value = appState.coachApiProvider || 'openrouter';
+        if (keyInp) keyInp.value = appState.coachApiKey || '';
+        document.getElementById('modal-coach-api')?.classList.remove('hidden');
+      });
+      safeClick('btn-close-coach-api', () => {
+        document.getElementById('modal-coach-api')?.classList.add('hidden');
+      });
+      safeClick('btn-save-coach-api', () => {
         playTapSound();
-        [tabBtnCloud, tabBtnFile, tabBtnCode].forEach(b => {
-          if (b) b.className = 'flex-1 py-2 rounded-xl font-bold text-zinc-400 hover:text-white transition';
-        });
-        [viewCloud, viewFile, viewCode].forEach(v => { if (v) v.classList.add('hidden'); });
-
-        if (activeTab === 'code') {
-          if (tabBtnCode) tabBtnCode.className = 'flex-1 py-2 rounded-xl font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 transition';
-          if (viewCode) viewCode.classList.remove('hidden');
-          if (txtExportPreview) {
-            txtExportPreview.value = encodeAppStateToText(appState);
-          }
-        } else if (activeTab === 'file') {
-          if (tabBtnFile) tabBtnFile.className = 'flex-1 py-2 rounded-xl font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 transition';
-          if (viewFile) viewFile.classList.remove('hidden');
-        } else if (activeTab === 'cloud') {
-          if (tabBtnCloud) tabBtnCloud.className = 'flex-1 py-2 rounded-xl font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 transition';
-          if (viewCloud) viewCloud.classList.remove('hidden');
-        }
-      }
-
-      if (tabBtnCloud) tabBtnCloud.onclick = () => switchSyncTab('cloud');
-      if (tabBtnFile) tabBtnFile.onclick = () => switchSyncTab('file');
-      if (tabBtnCode) tabBtnCode.onclick = () => switchSyncTab('code');
-
-      if (btnOpenSync && modalSync) {
-        btnOpenSync.onclick = () => {
-          playTapSound();
-          const inpPin = document.getElementById('inp-sync-pin');
-          if (inpPin && appState.syncPin) inpPin.value = appState.syncPin;
-          if (txtExportPreview) txtExportPreview.value = encodeAppStateToText(appState);
-          switchSyncTab('code'); // Default to Tab 1 (Text)
-          modalSync.classList.remove('hidden');
-        };
-      }
-
-      if (btnCloseSync && modalSync) {
-        btnCloseSync.onclick = () => modalSync.classList.add('hidden');
-      }
-
-      // Copy Button for Export
-      const btnCopyCode = document.getElementById('btn-copy-sync-code');
-      if (btnCopyCode && txtExportPreview) {
-        btnCopyCode.onclick = async () => {
-          playTapSound();
-          const freshCode = encodeAppStateToText(appState);
-          txtExportPreview.value = freshCode;
-          txtExportPreview.focus();
-          txtExportPreview.select();
-          txtExportPreview.setSelectionRange(0, 999999);
-
-          let copied = false;
-          try {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              await navigator.clipboard.writeText(freshCode);
-              copied = true;
-            }
-          } catch (eClip) {}
-
-          if (!copied) {
-            try {
-              copied = document.execCommand('copy');
-            } catch (eExec) {}
-          }
-
-          if (copied) {
-            showToast('📋 Код скопирован! Отправьте его себе в Telegram');
-          } else {
-            showToast('Текст выделен: нажмите Ctrl+C для копирования');
-          }
-        };
-      }
-
-      // Paste from Clipboard Button for Import
-      const btnPasteClipboard = document.getElementById('btn-paste-clipboard-into-input');
-      if (btnPasteClipboard && txtImportInput) {
-        btnPasteClipboard.onclick = async () => {
-          playTapSound();
-          try {
-            if (navigator.clipboard && navigator.clipboard.readText) {
-              const text = await navigator.clipboard.readText();
-              if (text) {
-                txtImportInput.value = text;
-                showToast('Текст вставлен из буфера!');
-                return;
-              }
-            }
-          } catch(e) {}
-          txtImportInput.focus();
-          showToast('Нажмите долго на поле и выберите «Вставить»');
-        };
-      }
-
-      // Apply Button for Import
-      const btnApplyCode = document.getElementById('btn-apply-sync-code');
-      if (btnApplyCode && txtImportInput) {
-        btnApplyCode.onclick = () => {
-          playTapSound();
-          const codeInput = txtImportInput.value.trim();
-          if (!codeInput) {
-            showToast('⚠️ Сначала вставьте скопированный текст в поле выше!');
-            return;
-          }
-          try {
-            const parsed = decodeAppStateFromText(codeInput);
-            if (parsed && typeof parsed === 'object') {
-              if (applyImportedState(parsed)) {
-                showToast(`🎉 Все данные перенесены! (${appState.workouts?.length || 0} трен., ${appState.bodyLogs?.length || 0} замеров)`);
-              }
-            } else {
-              showToast('Не удалось распознать данные: проверьте текст');
-            }
-          } catch(errDec) {
-            console.warn('Decode error:', errDec);
-            showToast('Ошибка данных: проверьте, что скопировали весь текст');
-          }
-        };
-      }
-
-      // File Download & Native Label File Picker
-      const btnDlFile = document.getElementById('btn-download-backup-file');
-      if (btnDlFile) btnDlFile.onclick = () => exportProfileToFile();
-
-      const inpImportFile = document.getElementById('inp-import-backup-file');
-      const labelFileImport = document.getElementById('label-file-import-text');
-      if (inpImportFile) {
-        inpImportFile.onchange = (e) => {
-          const file = e.target.files && e.target.files[0];
-          if (file) {
-            if (labelFileImport) labelFileImport.textContent = `Загрузка: ${file.name}...`;
-            importProfileFromFile(file);
-          }
-        };
-      }
-
-      const btnApplyDirectText = document.getElementById('btn-apply-direct-file-text');
-      const inpDirectText = document.getElementById('inp-direct-file-text');
-      if (btnApplyDirectText && inpDirectText) {
-        btnApplyDirectText.onclick = () => {
-          playTapSound();
-          const txt = inpDirectText.value.trim();
-          if (!txt) {
-            showToast('Вставьте текст в поле');
-            return;
-          }
-          try {
-            const parsed = decodeAppStateFromText(txt);
-            if (parsed && applyImportedState(parsed)) {
-              showToast('✅ Данные успешно применены из текста!');
-            }
-          } catch(e) {
-            showToast('Не удалось распознать данные: проверьте текст');
-          }
-        };
-      }
-
-      // Cloud PIN Listeners
-      const btnGenPin = document.getElementById('btn-generate-random-pin');
-      if (btnGenPin) {
-        btnGenPin.onclick = () => {
-          playTapSound();
-          const randNum = Math.floor(1000 + Math.random() * 9000);
-          const inpPin = document.getElementById('inp-sync-pin');
-          if (inpPin) inpPin.value = `DDX-${randNum}`;
-        };
-      }
-
-      const btnPushCloud = document.getElementById('btn-push-to-cloud');
-      if (btnPushCloud) btnPushCloud.onclick = () => pushAppStateToCloud();
-
-      const btnPullCloud = document.getElementById('btn-pull-from-cloud');
-      if (btnPullCloud) btnPullCloud.onclick = () => pullAppStateFromCloud();
-
-      
-      // Theme Studio DOM Handlers
-      const btnOpenTheme = document.getElementById('btn-open-theme-modal');
-      const modalTheme = document.getElementById('modal-theme-picker');
-      const btnCloseTheme = document.getElementById('btn-close-theme-modal');
-
-      if (btnOpenTheme && modalTheme) {
-        btnOpenTheme.onclick = () => {
-          playTapSound();
-          applyTheme(appState.selectedTheme || 'cyberpunk');
-          modalTheme.classList.remove('hidden');
-        };
-      }
-
-      if (btnCloseTheme && modalTheme) {
-        btnCloseTheme.onclick = () => modalTheme.classList.add('hidden');
-      }
-
-      document.querySelectorAll('#theme-cards-container .theme-select-card').forEach(card => {
-        card.onclick = () => {
-          playTapSound();
-          const t = card.getAttribute('data-theme');
-          applyTheme(t);
-          triggerParticleBurst(window.innerWidth / 2, window.innerHeight / 2);
-          showToast(`🎨 Стиль «${card.querySelector('span').textContent}» активирован!`);
-          setTimeout(() => {
-            if (modalTheme) modalTheme.classList.add('hidden');
-          }, 350);
-        };
+        const prov = document.getElementById('coach-api-provider')?.value || 'openrouter';
+        const key = document.getElementById('inp-coach-api-key')?.value.trim() || '';
+        appState.coachApiProvider = prov;
+        appState.coachApiKey = key;
+        saveState();
+        document.getElementById('modal-coach-api')?.classList.add('hidden');
+        showToast('Настройки AI сохранены');
       });
 
-      // Standalone Timer Tab Listeners
-      const btnTimerPlay = document.getElementById('btn-timer-toggle-play');
-      if (btnTimerPlay) {
-        btnTimerPlay.onclick = () => {
-          playTapSound();
-          if (tabTimerIsRunning) pauseTabTimer();
-          else startTabTimer();
-        };
-      }
+      // Coach Profile Modal
+      safeClick('btn-open-coach-profile', () => {
+        playTapSound();
+        document.getElementById('modal-coach-profile')?.classList.remove('hidden');
+      });
+      safeClick('btn-quick-rename-coach', () => {
+        playTapSound();
+        document.getElementById('modal-coach-profile')?.classList.remove('hidden');
+      });
+      safeClick('btn-close-coach-profile', () => {
+        document.getElementById('modal-coach-profile')?.classList.add('hidden');
+      });
+      safeClick('btn-save-coach-profile', () => {
+        playTapSound();
+        const name = document.getElementById('inp-coach-custom-name')?.value.trim() || 'IronCoach';
+        const role = document.getElementById('inp-coach-custom-role')?.value.trim() || 'Наставник по залу DDX';
+        const voice = document.getElementById('select-coach-voice-preset')?.value || 'google_neural';
+        appState.coachProfile = appState.coachProfile || {};
+        appState.coachProfile.name = name;
+        appState.coachProfile.role = role;
+        appState.coachProfile.voicePreset = voice;
+        saveState();
+        renderCoachProfileHeader();
+        document.getElementById('modal-coach-profile')?.classList.add('hidden');
+        showToast(`Тренер обновлен: ${name}`);
+      });
+      safeClick('btn-test-coach-voice', () => {
+        playTapSound();
+        speakViaBrowserSpeech('Привет, атлет! Я твой персональный наставник в зале DDX. Жмем мощно и с идеальной техникой!');
+      });
 
-      const btnTimerReset = document.getElementById('btn-timer-reset');
-      if (btnTimerReset) {
-        btnTimerReset.onclick = () => {
-          playTapSound();
-          resetTabTimer();
-        };
-      }
-
-      const btnTimerAdd30 = document.getElementById('btn-timer-add-30');
-      if (btnTimerAdd30) {
-        btnTimerAdd30.onclick = () => {
-          playTapSound();
-          tabTimerSecondsLeft += 30;
-          tabTimerTotalSeconds += 30;
-          updateTabTimerDisplay();
-        };
-      }
-
-      const btnTimerSub15 = document.getElementById('btn-timer-sub-15');
-      if (btnTimerSub15) {
-        btnTimerSub15.onclick = () => {
-          playTapSound();
-          tabTimerSecondsLeft = Math.max(5, tabTimerSecondsLeft - 15);
-          updateTabTimerDisplay();
-        };
-      }
-
-      document.querySelectorAll('.btn-timer-preset').forEach(btn => {
-        btn.onclick = () => {
-          playTapSound();
-          const sec = parseInt(btn.getAttribute('data-sec')) || 90;
-          document.querySelectorAll('.btn-timer-preset').forEach(b => {
-            b.className = 'btn-timer-preset tap-btn py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-bold text-zinc-300 hover:border-cyan-400';
+      // Coach Notes
+      safeClick('btn-toggle-coach-notes', () => {
+        playTapSound();
+        const p = document.getElementById('panel-coach-notes');
+        if (p) {
+          p.classList.toggle('hidden');
+          renderCoachNotes();
+        }
+      });
+      safeClick('btn-add-manual-coach-note', () => {
+        playTapSound();
+        const inp = document.getElementById('inp-manual-coach-note');
+        if (inp && inp.value.trim()) {
+          appState.notes = appState.notes || [];
+          appState.notes.unshift({
+            id: 'n_' + Date.now(),
+            text: inp.value.trim(),
+            date: new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
           });
-          btn.className = 'btn-timer-preset tap-btn py-2.5 rounded-xl bg-cyan-950/60 border border-cyan-500/50 text-xs font-black text-cyan-300';
-          resetTabTimer(sec);
-        };
-      });
-
-      // Voice Preset Selection in Coach Profile Modal
-      const btnTestVoice = document.getElementById('btn-test-coach-voice');
-      if (btnTestVoice) {
-        btnTestVoice.onclick = () => {
-          const selectedRadio = document.querySelector('input[name="coach-voice-opt"]:checked');
-          const v = selectedRadio ? selectedRadio.value : 'male_deep';
-          speakCoachText('Привет, атлет! Я твой тренер IronCoach. Готов рвать веса в зале DDX!', v);
-        };
-      }
-
-      // Update voice radio when opening coach profile modal
-      const oldOpenCoachProf = openCoachProfileDialog;
-      openCoachProfileDialog = function() {
-        if (typeof oldOpenCoachProf === 'function') oldOpenCoachProf();
-        const v = appState.coachProfile?.voicePreset || 'male_deep';
-        const radio = document.querySelector(`input[name="coach-voice-opt"][value="${v}"]`);
-        if (radio) radio.checked = true;
-      };
-
-      // Hook up voice saving when saving coach profile
-      const oldBtnSaveCoach = btnSaveCoachProf.onclick;
-      btnSaveCoachProf.onclick = () => {
-        const selectedRadio = document.querySelector('input[name="coach-voice-opt"]:checked');
-        if (selectedRadio) {
-          appState.coachProfile = appState.coachProfile || {};
-          appState.coachProfile.voicePreset = selectedRadio.value;
+          inp.value = '';
+          saveState();
+          renderCoachNotes();
+          showToast('Заметка сохранена');
         }
-        if (typeof oldBtnSaveCoach === 'function') oldBtnSaveCoach();
-      };
-
-      // Initial state restores
-      applyTheme(appState.selectedTheme || 'cyberpunk');
-      renderCoachChatHistory();
-      updateTabTimerDisplay();
-
-      
-      // Persistent Auto-Save on Tab Close / Backgrounding
-      window.addEventListener('beforeunload', () => saveState());
-      window.addEventListener('pagehide', () => saveState());
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') saveState();
       });
 
-      // IndexedDB Secondary Restore Fallback (if localStorage was cleared or fresh origin)
-      if (!appState.workouts.length && !appState.bodyLogs.length) {
-        loadFromIndexedDB((backupData) => {
-          if (backupData && (backupData.workouts?.length || backupData.bodyLogs?.length || backupData.records1RM?.length)) {
-            applyImportedState(backupData);
-            console.log('Restored state from IndexedDB backup!');
-          }
-        });
-      }
+      // Coach Camera & Photo Attachment
+      safeClick('btn-attach-coach-photo', () => {
+        document.getElementById('inp-coach-photo')?.click();
+      });
+      safeOn('inp-coach-photo', 'change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (re) => {
+            currentCoachAttachmentBase64 = re.target.result;
+            const imgPreview = document.getElementById('img-coach-attachment-preview');
+            const wrap = document.getElementById('wrapper-coach-attached-img');
+            if (imgPreview) imgPreview.src = currentCoachAttachmentBase64;
+            if (wrap) wrap.classList.remove('hidden');
+            showToast('Фото прикреплено к вопросу!');
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      safeClick('btn-remove-coach-attachment', () => {
+        currentCoachAttachmentBase64 = null;
+        document.getElementById('wrapper-coach-attached-img')?.classList.add('hidden');
+      });
+      safeClick('btn-open-live-camera', () => {
+        playTapSound();
+        startLiveCamera();
+      });
+      safeClick('btn-close-live-camera', () => {
+        stopLiveCamera();
+      });
+      safeClick('btn-capture-camera-frame', () => {
+        captureCameraFrame();
+      });
 
-      
-      // iOS Guide Modal
-      const btnOpenIos = document.getElementById('btn-open-ios-guide');
-      const modalIos = document.getElementById('modal-ios-guide');
-      const btnCloseIos = document.getElementById('btn-close-ios-guide');
-      if (btnOpenIos && modalIos) {
-        btnOpenIos.onclick = () => {
-          playTapSound();
-          modalIos.classList.remove('hidden');
-        };
-      }
-      if (btnCloseIos && modalIos) {
-        btnCloseIos.onclick = () => modalIos.classList.add('hidden');
-      }
-
-      
-      // ROBUST TOUCH & CLICK DELEGATION (Zero Dropped Taps, Instant Response)
+      // 17. GLOBAL EVENT DELEGATION
       document.addEventListener('click', (e) => {
-        // Coach chip prompt taps
+        // Coach prompt chips
         const chip = e.target.closest('.coach-chip');
         if (chip) {
           const prompt = chip.getAttribute('data-prompt');
@@ -6029,7 +5648,7 @@ ${JSON.stringify({ type: 'add_note', data: { text: noteText } }, null, 2)}
           return;
         }
 
-        // Tactile particle glow on button click (non-blocking)
+        // Tactile particle burst & click audio
         const btn = e.target.closest('button, .tap-btn, .bottom-tab-btn, .cal-day-cell');
         if (btn) {
           if (navigator.vibrate) try { navigator.vibrate(8); } catch(err) {}
@@ -6040,8 +5659,57 @@ ${JSON.stringify({ type: 'add_note', data: { text: noteText } }, null, 2)}
         }
       });
 
+      // 18. INITIALIZE UI
       renderWorkoutTab();
+      console.log('IronLog DDX: Master Engine v4.0 is ready!');
     });
   </script>
+
+  <!-- ============================================== -->
+  <!-- MODAL: SCHEDULE WORKOUT IN CALENDAR            -->
+  <!-- ============================================== -->
+  <div id="modal-schedule-workout" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-sm rounded-3xl p-5 border border-cyan-500/30 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-zinc-800">
+        <h3 class="font-black text-white text-base flex items-center gap-2">
+          <span>📅</span> Запланировать тренировку
+        </h3>
+        <button id="btn-close-schedule-modal" class="tap-btn btn-dark p-2 rounded-xl text-zinc-400 hover:text-white text-xs">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-[11px] font-bold text-zinc-400 mb-1">Программа тренировки (без ног)</label>
+          <select id="select-schedule-split" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+            <option value="День 1: Грудь + Бицепс (DDX)">День 1: Грудь + Бицепс (DDX)</option>
+            <option value="День 2: Спина + Плечи (DDX)">День 2: Спина + Плечи (DDX)</option>
+            <option value="День 3: Трицепс + Предплечья (DDX)">День 3: Трицепс + Предплечья (DDX)</option>
+            <option value="Свободная тренировка в зале">Свободная тренировка в зале</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-400 mb-1">Дата</label>
+            <input type="date" id="inp-schedule-date" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-400 mb-1">Время</label>
+            <input type="time" id="inp-schedule-time" value="18:30" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-zinc-400 mb-1">Заметка / Фокус</label>
+          <input type="text" id="inp-schedule-notes" placeholder="Например: сделать дропсет в хаммере" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400">
+        </div>
+
+        <button id="btn-submit-schedule" class="tap-btn btn-theme w-full py-3 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg mt-2">
+          Запланировать в календарь ✓
+        </button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
