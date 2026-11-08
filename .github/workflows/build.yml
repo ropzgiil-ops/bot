@@ -1,4 +1,4 @@
-name: Build iOS Native IPA
+name: Build iOS IPA
 
 on: [push, workflow_dispatch]
 
@@ -9,10 +9,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Generate Source and Build IPA
+      - name: Prepare App & Fix iOS Touch Engine
         run: |
-          set -e
-          mkdir -p Payload/IronLog.app
+          mkdir -p Payload/IronLog.app/www
 
           # 1. Info.plist
           cat << 'EOF' > Payload/IronLog.app/Info.plist
@@ -35,11 +34,16 @@ jobs:
           	<key>CFBundlePackageType</key>
           	<string>APPL</string>
           	<key>CFBundleShortVersionString</key>
-          	<string>1.0.0</string>
+          	<string>4.0.0</string>
           	<key>CFBundleVersion</key>
-          	<string>1</string>
+          	<string>4</string>
           	<key>LSRequiresIPhoneOS</key>
           	<true/>
+          	<key>NSAppTransportSecurity</key>
+          	<dict>
+          		<key>NSAllowsArbitraryLoads</key>
+          		<true/>
+          	</dict>
           	<key>UILaunchScreen</key>
           	<dict/>
           	<key>UIRequiredDeviceCapabilities</key>
@@ -58,592 +62,63 @@ jobs:
           </plist>
           EOF
 
-          # 2. Main Swift Source
+          # 2. Находим index.html в репозитории
+          if [ -f "index.html" ]; then
+            cp "index.html" Payload/IronLog.app/www/index.html
+          elif [ -f "IronLog/www/index.html" ]; then
+            cp "IronLog/www/index.html" Payload/IronLog.app/www/index.html
+          elif [ -f "IronLog/index.html" ]; then
+            cp "IronLog/index.html" Payload/IronLog.app/www/index.html
+          fi
+
+          # 3. Нативный контейнер без задержки тапов и с поддержкой звука
           cat << 'EOF' > main.swift
           import UIKit
-          import SwiftUI
+          import WebKit
 
-          // MARK: - Models
-          struct WorkoutSet: Identifiable, Codable {
-              var id = UUID()
-              var weight: Double
-              var reps: Int
-              var isCompleted: Bool = false
-              
-              var oneRepMax: Double {
-                  guard reps > 0 else { return 0 }
-                  return weight * (1.0 + Double(reps) / 30.0)
+          class WebViewController: UIViewController, WKNavigationDelegate, WKUIDelegate {
+              var webView: WKWebView!
+
+              override var preferredStatusBarStyle: UIStatusBarStyle {
+                  return .lightContent
               }
-          }
 
-          struct Exercise: Identifiable, Codable {
-              var id = UUID()
-              var name: String
-              var muscleGroup: String
-              var sets: [WorkoutSet]
-          }
+              override func viewDidLoad() {
+                  super.viewDidLoad()
+                  view.backgroundColor = UIColor(red: 0.03, green: 0.05, blue: 0.08, alpha: 1.0)
 
-          struct CompletedWorkout: Identifiable, Codable {
-              var id = UUID()
-              var title: String
-              var date: Date
-              var totalVolume: Double
-              var totalSets: Int
-          }
-
-          struct PersonalRecord: Identifiable, Codable {
-              var id = UUID()
-              var exerciseName: String
-              var weight: Double
-              var date: Date
-          }
-
-          struct ChatMessage: Identifiable, Codable {
-              var id = UUID()
-              var sender: String
-              var text: String
-          }
-
-          // MARK: - Data Store
-          class WorkoutStore: ObservableObject {
-              @Published var activeExercises: [Exercise] = []
-              @Published var isWorkoutActive: Bool = false
-              @Published var workoutTimerSeconds: Int = 0
-              @Published var restTimerSeconds: Int = 0
-              @Published var isRestTimerRunning: Bool = false
-              
-              @Published var history: [CompletedWorkout] = []
-              @Published var records: [PersonalRecord] = []
-              @Published var chatMessages: [ChatMessage] = []
-              
-              private var timer: Timer?
-              
-              init() {
-                  loadData()
-                  if chatMessages.isEmpty {
-                      chatMessages.append(ChatMessage(
-                          sender: "coach",
-                          text: "Привет, атлет! Я твой наставник IronCoach. Твой 3-дневный сплит на верх тела готов. Задавай вопросы по технике или весам!"
-                      ))
-                  }
-              }
-              
-              func startWorkout(title: String) {
-                  activeExercises = defaultExercises(for: title)
-                  isWorkoutActive = true
-                  workoutTimerSeconds = 0
-                  timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-                      guard let self = self else { return }
-                      self.workoutTimerSeconds += 1
-                      if self.isRestTimerRunning && self.restTimerSeconds > 0 {
-                          self.restTimerSeconds -= 1
-                          if self.restTimerSeconds == 0 {
-                              self.isRestTimerRunning = false
-                              let generator = UINotificationFeedbackGenerator()
-                              generator.notificationOccurred(.success)
-                          }
-                      }
-                  }
-              }
-              
-              func finishWorkout() {
-                  var volume: Double = 0
-                  var completedSets = 0
-                  for ex in activeExercises {
-                      for set in ex.sets where set.isCompleted {
-                          volume += set.weight * Double(set.reps)
-                          completedSets += 1
-                          let current1RM = set.oneRepMax
-                          if let idx = records.firstIndex(where: { $0.exerciseName == ex.name }) {
-                              if current1RM > records[idx].weight {
-                                  records[idx].weight = current1RM
-                                  records[idx].date = Date()
-                              }
-                          } else if set.weight > 0 {
-                              records.append(PersonalRecord(exerciseName: ex.name, weight: current1RM, date: Date()))
-                          }
-                      }
-                  }
+                  let config = WKWebViewConfiguration()
+                  config.allowsInlineMediaPlayback = true
+                  config.mediaTypesRequiringUserActionForPlayback = []
                   
-                  let completed = CompletedWorkout(
-                      title: "Тренировка сплита",
-                      date: Date(),
-                      totalVolume: volume,
-                      totalSets: completedSets
-                  )
-                  history.insert(completed, at: 0)
-                  isWorkoutActive = false
-                  timer?.invalidate()
-                  timer = nil
-                  saveData()
-              }
-              
-              func startRestTimer(seconds: Int = 90) {
-                  restTimerSeconds = seconds
-                  isRestTimerRunning = true
-              }
-              
-              func addSet(to exerciseID: UUID) {
-                  guard let idx = activeExercises.firstIndex(where: { $0.id == exerciseID }) else { return }
-                  let lastWeight = activeExercises[idx].sets.last?.weight ?? 60.0
-                  let lastReps = activeExercises[idx].sets.last?.reps ?? 10
-                  activeExercises[idx].sets.append(WorkoutSet(weight: lastWeight, reps: lastReps))
-                  UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-              }
-              
-              func toggleSet(exerciseID: UUID, setID: UUID) {
-                  guard let exIdx = activeExercises.firstIndex(where: { $0.id == exerciseID }),
-                        let setIdx = activeExercises[exIdx].sets.firstIndex(where: { $0.id == setID }) else { return }
-                  activeExercises[exIdx].sets[setIdx].isCompleted.toggle()
-                  UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
-                  if activeExercises[exIdx].sets[setIdx].isCompleted {
-                      startRestTimer(seconds: 90)
-                  }
-              }
-              
-              func sendMessageToCoach(text: String) {
-                  guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                  chatMessages.append(ChatMessage(sender: "user", text: text))
-                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                      let reply = self.generateCoachAnswer(for: text)
-                      self.chatMessages.append(ChatMessage(sender: "coach", text: reply))
-                      UINotificationFeedbackGenerator().notificationOccurred(.success)
-                      self.saveData()
-                  }
-                  saveData()
-              }
-              
-              private func generateCoachAnswer(for query: String) -> String {
-                  let q = query.lowercased()
-                  if q.contains("жим") {
-                      return "Жим лёжа: лопатки сведены и опущены к тазу, угол в локтях 70-75°, опускай на нижнюю часть груди. Мощный жим на выдохе."
-                  } else if q.contains("креатин") {
-                      return "Креатин моногидрат: принимай каждый день стабильно по 5 грамм, запивая водой. Загрузка не требуется."
-                  } else if q.contains("размин") {
-                      return "Пирамида разминки: 1) пустой гриф 15-20 раз; 2) 50% веса 8 раз; 3) 70% веса 4 раза; 4) 85% веса 1-2 раза. Отдых 2 мин и переход к рабочим весам."
+                  let script = WKUserScript(source: "document.documentElement.style.webkitTouchCallout='none'; document.documentElement.style.webkitUserSelect='none';", injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+                  config.userContentController.addUserScript(script)
+
+                  webView = WKWebView(frame: view.bounds, configuration: config)
+                  webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                  webView.navigationDelegate = self
+                  webView.uiDelegate = self
+                  webView.isOpaque = false
+                  webView.backgroundColor = .clear
+                  webView.scrollView.bounces = false
+                  webView.scrollView.contentInsetAdjustmentBehavior = .never
+                  view.addSubview(webView)
+
+                  let wwwURL = Bundle.main.bundleURL.appendingPathComponent("www")
+                  let indexURL = wwwURL.appendingPathComponent("index.html")
+
+                  if FileManager.default.fileExists(atPath: indexURL.path) {
+                      webView.loadFileURL(indexURL, allowingReadAccessTo: Bundle.main.bundleURL)
                   } else {
-                      return "Фокусируйся на прогрессии нагрузок: добавляй по 1-2.5 кг или +1 повторение каждую неделю при строгой технике."
-                  }
-              }
-              
-              private func defaultExercises(for title: String) -> [Exercise] {
-                  if title.contains("Спина") {
-                      return [
-                          Exercise(name: "Тяга верхнего блока к груди", muscleGroup: "Спина", sets: [
-                              WorkoutSet(weight: 55, reps: 10),
-                              WorkoutSet(weight: 60, reps: 10),
-                              WorkoutSet(weight: 65, reps: 8)
-                          ]),
-                          Exercise(name: "Тяга горизонтального блока к поясу", muscleGroup: "Спина", sets: [
-                              WorkoutSet(weight: 50, reps: 10),
-                              WorkoutSet(weight: 55, reps: 10)
-                          ]),
-                          Exercise(name: "Махи гантелями в стороны", muscleGroup: "Плечи", sets: [
-                              WorkoutSet(weight: 10, reps: 12),
-                              WorkoutSet(weight: 12, reps: 12)
-                          ])
-                      ]
-                  } else if title.contains("Руки") {
-                      return [
-                          Exercise(name: "Французский жим с EZ-грифом", muscleGroup: "Трицепс", sets: [
-                              WorkoutSet(weight: 30, reps: 10),
-                              WorkoutSet(weight: 35, reps: 8)
-                          ]),
-                          Exercise(name: "Разгибания на блоке с канатом", muscleGroup: "Трицепс", sets: [
-                              WorkoutSet(weight: 25, reps: 12),
-                              WorkoutSet(weight: 30, reps: 10)
-                          ]),
-                          Exercise(name: "Сгибания на предплечья (хват)", muscleGroup: "Хват", sets: [
-                              WorkoutSet(weight: 20, reps: 15),
-                              WorkoutSet(weight: 25, reps: 12)
-                          ])
-                      ]
-                  } else {
-                      return [
-                          Exercise(name: "Жим штанги лёжа", muscleGroup: "Грудь", sets: [
-                              WorkoutSet(weight: 70, reps: 8),
-                              WorkoutSet(weight: 75, reps: 8),
-                              WorkoutSet(weight: 80, reps: 6)
-                          ]),
-                          Exercise(name: "Жим гантелей на наклонной скамье", muscleGroup: "Грудь", sets: [
-                              WorkoutSet(weight: 24, reps: 10),
-                              WorkoutSet(weight: 26, reps: 8)
-                          ]),
-                          Exercise(name: "Подъем штанги на бицепс стоя", muscleGroup: "Бицепс", sets: [
-                              WorkoutSet(weight: 35, reps: 10),
-                              WorkoutSet(weight: 40, reps: 8)
-                          ])
-                      ]
-                  }
-              }
-              
-              private func saveData() {
-                  if let encoded = try? JSONEncoder().encode(history) {
-                      UserDefaults.standard.set(encoded, forKey: "ironlog_history")
-                  }
-                  if let encoded = try? JSONEncoder().encode(records) {
-                      UserDefaults.standard.set(encoded, forKey: "ironlog_records")
-                  }
-                  if let encoded = try? JSONEncoder().encode(chatMessages) {
-                      UserDefaults.standard.set(encoded, forKey: "ironlog_chat")
-                  }
-              }
-              
-              private func loadData() {
-                  if let data = UserDefaults.standard.data(forKey: "ironlog_history"),
-                     let decoded = try? JSONDecoder().decode([CompletedWorkout].self, from: data) {
-                      self.history = decoded
-                  }
-                  if let data = UserDefaults.standard.data(forKey: "ironlog_records"),
-                     let decoded = try? JSONDecoder().decode([PersonalRecord].self, from: data) {
-                      self.records = decoded
-                  } else {
-                      self.records = [
-                          PersonalRecord(exerciseName: "Жим штанги лёжа", weight: 90, date: Date()),
-                          PersonalRecord(exerciseName: "Жим гантелей 30°", weight: 32, date: Date()),
-                          PersonalRecord(exerciseName: "Бицепс со штангой", weight: 45, date: Date())
-                      ]
-                  }
-                  if let data = UserDefaults.standard.data(forKey: "ironlog_chat"),
-                     let decoded = try? JSONDecoder().decode([ChatMessage].self, from: data) {
-                      self.chatMessages = decoded
+                      let html = "<html><body style='background:#0b0f19;color:white;font-family:sans-serif;padding:30px;text-align:center;'><h2>Файл index.html не найден</h2></body></html>"
+                      webView.loadHTMLString(html, baseURL: nil)
                   }
               }
           }
 
-          // MARK: - UI Views
-          struct MainTabView: View {
-              @EnvironmentObject var store: WorkoutStore
-              @State private var selectedTab = 0
-              
-              var body: some View {
-                  TabView(selection: $selectedTab) {
-                      WorkoutView()
-                          .tabItem { Label("Зал", systemImage: "bolt.fill") }
-                          .tag(0)
-                      
-                      RecordsView()
-                          .tabItem { Label("Рекорды", systemImage: "trophy.fill") }
-                          .tag(1)
-                      
-                      TimerView()
-                          .tabItem { Label("Таймер", systemImage: "stopwatch.fill") }
-                          .tag(2)
-                      
-                      HistoryView()
-                          .tabItem { Label("История", systemImage: "calendar") }
-                          .tag(3)
-                      
-                      CoachChatView()
-                          .tabItem { Label("Тренер AI", systemImage: "bubble.left.and.bubble.right.fill") }
-                          .tag(4)
-                  }
-                  .accentColor(.cyan)
-              }
-          }
-
-          struct WorkoutView: View {
-              @EnvironmentObject var store: WorkoutStore
-              
-              var body: some View {
-                  NavigationView {
-                      ZStack {
-                          Color(red: 0.03, green: 0.05, blue: 0.08).ignoresSafeArea()
-                          ScrollView {
-                              VStack(spacing: 16) {
-                                  if store.isWorkoutActive {
-                                      activeHeader
-                                      ForEach(store.activeExercises) { ex in
-                                          ExerciseCard(exercise: ex)
-                                      }
-                                      Button(action: { store.finishWorkout() }) {
-                                          HStack {
-                                              Image(systemName: "checkmark.circle.fill")
-                                              Text("Завершить тренировку")
-                                          }
-                                          .font(.headline)
-                                          .foregroundColor(.black)
-                                          .frame(maxWidth: .infinity)
-                                          .frame(height: 52)
-                                          .background(Color.cyan)
-                                          .cornerRadius(12)
-                                      }
-                                  } else {
-                                      idleHeader
-                                  }
-                              }
-                              .padding()
-                          }
-                      }
-                      .navigationTitle("IronLog DDX")
-                      .navigationBarTitleDisplayMode(.inline)
-                  }
-              }
-              
-              var idleHeader: some View {
-                  VStack(spacing: 14) {
-                      VStack(alignment: .leading, spacing: 6) {
-                          Text("3-дневный сплит (Верх тела)")
-                              .font(.caption).bold().foregroundColor(.cyan)
-                          Text("Время качать железо!")
-                              .font(.title2).bold().foregroundColor(.white)
-                      }
-                      .frame(maxWidth: .infinity, alignment: .leading)
-                      .padding()
-                      .background(Color(red: 0.07, green: 0.1, blue: 0.15))
-                      .cornerRadius(14)
-                      
-                      splitBtn(title: "⚡ День 1: Грудь & Бицепс", sub: "Жим штанги, наклонные гантели, бицепс стоя") {
-                          store.startWorkout(title: "День 1: Грудь & Бицепс")
-                      }
-                      splitBtn(title: "⚡ День 2: Спина & Плечи", sub: "Верхний блок, горизонтальная тяга, махи") {
-                          store.startWorkout(title: "День 2: Спина & Плечи")
-                      }
-                      splitBtn(title: "⚡ День 3: Трицепс & Хват", sub: "Французский жим, канат, предплечья") {
-                          store.startWorkout(title: "День 3: Трицепс & Хват")
-                      }
-                  }
-              }
-              
-              var activeHeader: some View {
-                  HStack {
-                      VStack(alignment: .leading) {
-                          Text("ИДЕТ ТРЕНИРОВКА").font(.caption2).bold().foregroundColor(.cyan)
-                          Text(formatTime(store.workoutTimerSeconds)).font(.title).bold().foregroundColor(.white)
-                      }
-                      Spacer()
-                      if store.isRestTimerRunning {
-                          VStack(alignment: .trailing) {
-                              Text("ОТДЫХ").font(.caption2).bold().foregroundColor(.orange)
-                              Text("\(store.restTimerSeconds) сек").font(.title2).bold().foregroundColor(.orange)
-                          }
-                          .padding(.horizontal, 10).padding(.vertical, 4)
-                          .background(Color.orange.opacity(0.15)).cornerRadius(8)
-                      }
-                  }
-                  .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(12)
-              }
-              
-              func splitBtn(title: String, sub: String, action: @escaping () -> Void) -> some View {
-                  Button(action: action) {
-                      VStack(alignment: .leading, spacing: 4) {
-                          Text(title).font(.headline).foregroundColor(.white)
-                          Text(sub).font(.caption).foregroundColor(.gray)
-                      }
-                      .frame(maxWidth: .infinity, alignment: .leading)
-                      .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(12)
-                  }
-              }
-              
-              func formatTime(_ sec: Int) -> String {
-                  String(format: "%02d:%02d", sec / 60, sec % 60)
-              }
-          }
-
-          struct ExerciseCard: View {
-              @EnvironmentObject var store: WorkoutStore
-              var exercise: Exercise
-              
-              var body: some View {
-                  VStack(alignment: .leading, spacing: 10) {
-                      HStack {
-                          Text(exercise.name).font(.headline).foregroundColor(.white)
-                          Spacer()
-                          Text(exercise.muscleGroup)
-                              .font(.caption2).bold().padding(.horizontal, 6).padding(.vertical, 2)
-                              .background(Color.cyan.opacity(0.2)).foregroundColor(.cyan).cornerRadius(4)
-                      }
-                      ForEach(Array(exercise.sets.enumerated()), id: \.element.id) { idx, set in
-                          HStack {
-                              Text("\(idx + 1)").foregroundColor(.gray).frame(width: 20)
-                              Text("\(Int(set.weight)) кг × \(set.reps)").foregroundColor(.white)
-                              if set.oneRepMax > 0 {
-                                  Text("1RM: \(Int(set.oneRepMax))").font(.caption2).foregroundColor(.cyan)
-                              }
-                              Spacer()
-                              Button(action: { store.toggleSet(exerciseID: exercise.id, setID: set.id) }) {
-                                  Image(systemName: set.isCompleted ? "checkmark.circle.fill" : "circle")
-                                      .font(.title3).foregroundColor(set.isCompleted ? .teal : .gray)
-                              }
-                          }
-                          .padding(8).background(Color(red: 0.05, green: 0.08, blue: 0.12)).cornerRadius(8)
-                      }
-                      Button(action: { store.addSet(to: exercise.id) }) {
-                          HStack { Image(systemName: "plus"); Text("Добавить подход") }
-                              .font(.caption).bold().foregroundColor(.cyan)
-                              .frame(maxWidth: .infinity).frame(height: 32)
-                              .background(Color.cyan.opacity(0.12)).cornerRadius(8)
-                      }
-                  }
-                  .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(12)
-              }
-          }
-
-          struct RecordsView: View {
-              @EnvironmentObject var store: WorkoutStore
-              @State private var name = ""
-              @State private var weight = ""
-              
-              var body: some View {
-                  NavigationView {
-                      ZStack {
-                          Color(red: 0.03, green: 0.05, blue: 0.08).ignoresSafeArea()
-                          ScrollView {
-                              VStack(spacing: 16) {
-                                  ForEach(store.records) { r in
-                                      HStack {
-                                          Text(r.exerciseName).foregroundColor(.white)
-                                          Spacer()
-                                          Text("\(Int(r.weight)) кг").bold().foregroundColor(.cyan)
-                                      }
-                                      .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(10)
-                                  }
-                                  VStack(spacing: 8) {
-                                      TextField("Название упражнения", text: $name)
-                                          .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(8)
-                                      TextField("Вес (кг)", text: $weight)
-                                          .keyboardType(.decimalPad)
-                                          .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(8)
-                                      Button("Добавить рекорд") {
-                                          if let w = Double(weight), !name.isEmpty {
-                                              store.records.append(PersonalRecord(exerciseName: name, weight: w, date: Date()))
-                                              name = ""; weight = ""
-                                          }
-                                      }
-                                      .frame(maxWidth: .infinity).frame(height: 44)
-                                      .background(Color.cyan).foregroundColor(.black).bold().cornerRadius(8)
-                                  }
-                                  .padding().background(Color(red: 0.05, green: 0.08, blue: 0.12)).cornerRadius(12)
-                              }
-                              .padding()
-                          }
-                      }
-                      .navigationTitle("Рекорды 1RM")
-                      .navigationBarTitleDisplayMode(.inline)
-                  }
-              }
-          }
-
-          struct TimerView: View {
-              @EnvironmentObject var store: WorkoutStore
-              var body: some View {
-                  ZStack {
-                      Color(red: 0.03, green: 0.05, blue: 0.08).ignoresSafeArea()
-                      VStack(spacing: 24) {
-                          Text("\(store.restTimerSeconds)").font(.system(size: 72, weight: .bold)).foregroundColor(.cyan)
-                          HStack(spacing: 10) {
-                              ForEach([60, 90, 120, 180], id: \.self) { s in
-                                  Button("\(s)с") { store.startRestTimer(seconds: s) }
-                                      .padding().background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(8)
-                              }
-                          }
-                          Button(store.isRestTimerRunning ? "Стоп" : "Старт 90с") {
-                              if store.isRestTimerRunning { store.isRestTimerRunning = false }
-                              else { store.startRestTimer(seconds: 90) }
-                          }
-                          .frame(maxWidth: .infinity).frame(height: 48)
-                          .background(Color.cyan).foregroundColor(.black).bold().cornerRadius(10)
-                          .padding(.horizontal, 40)
-                      }
-                  }
-              }
-          }
-
-          struct HistoryView: View {
-              @EnvironmentObject var store: WorkoutStore
-              var body: some View {
-                  NavigationView {
-                      ZStack {
-                          Color(red: 0.03, green: 0.05, blue: 0.08).ignoresSafeArea()
-                          List(store.history) { h in
-                              VStack(alignment: .leading, spacing: 4) {
-                                  Text(h.title).bold().foregroundColor(.white)
-                                  Text("Тоннаж: \(Int(h.totalVolume)) кг • Подходов: \(h.totalSets)")
-                                      .font(.caption).foregroundColor(.gray)
-                              }
-                              .listRowBackground(Color(red: 0.07, green: 0.1, blue: 0.15))
-                          }
-                          .scrollContentBackground(.hidden)
-                      }
-                      .navigationTitle("История")
-                      .navigationBarTitleDisplayMode(.inline)
-                  }
-              }
-          }
-
-          struct CoachChatView: View {
-              @EnvironmentObject var store: WorkoutStore
-              @State private var text = ""
-              
-              var body: some View {
-                  NavigationView {
-                      ZStack {
-                          Color(red: 0.03, green: 0.05, blue: 0.08).ignoresSafeArea()
-                          VStack {
-                              ScrollView {
-                                  VStack(spacing: 10) {
-                                      ForEach(store.chatMessages) { m in
-                                          HStack {
-                                              if m.sender == "user" { Spacer() }
-                                              Text(m.text)
-                                                  .padding(10)
-                                                  .background(m.sender == "user" ? Color.cyan.opacity(0.3) : Color(red: 0.07, green: 0.1, blue: 0.15))
-                                                  .cornerRadius(10)
-                                                  .foregroundColor(.white)
-                                              if m.sender == "coach" { Spacer() }
-                                          }
-                                      }
-                                  }
-                                  .padding()
-                              }
-                              HStack {
-                                  TextField("Вопрос тренеру...", text: $text)
-                                      .padding(10).background(Color(red: 0.07, green: 0.1, blue: 0.15)).cornerRadius(8)
-                                  Button("➤") {
-                                      let query = text
-                                      text = ""
-                                      store.sendMessageToCoach(text: query)
-                                  }
-                                  .font(.title2).foregroundColor(.cyan).padding(.horizontal, 8)
-                              }
-                              .padding()
-                          }
-                      }
-                      .navigationTitle("IronCoach AI")
-                      .navigationBarTitleDisplayMode(.inline)
-                  }
-              }
-          }
-
-          // MARK: - App Entrypoint
           @UIApplicationMain
           class AppDelegate: UIResponder, UIApplicationDelegate {
               var window: UIWindow?
+
               func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-                  let window = UIWindow(frame: UIScreen.main.bounds)
-                  window.rootViewController = UIHostingController(rootView: MainTabView().environmentObject(WorkoutStore()))
-                  self.window = window
-                  window.makeKeyAndVisible()
-                  return true
-              }
-          }
-          EOF
-
-          # 3. Direct Native Compilation
-          SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
-          swiftc -sdk "$SDK_PATH" \
-                 -target arm64-apple-ios15.0 \
-                 -framework UIKit \
-                 -framework SwiftUI \
-                 -O \
-                 main.swift \
-                 -o Payload/IronLog.app/IronLog
-
-          chmod +x Payload/IronLog.app/IronLog
-          zip -r IronLog_DDX.ipa Payload
-
-      - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: IronLog_DDX_IPA
-          path: IronLog_DDX.ipa
+                  let win = UIWindow(frame: UIScreen.main.bounds
