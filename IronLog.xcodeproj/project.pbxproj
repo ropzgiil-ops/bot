@@ -1,0 +1,256 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1D3623260D0F680D0044E220 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3623250D0F680D0044E220 /* AppDelegate.swift */; };
+		1D3623280D0F680D0044E220 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3623270D0F680D0044E220 /* SceneDelegate.swift */; };
+		1D36232A0D0F680D0044E220 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D3623290D0F680D0044E220 /* ViewController.swift */; };
+		1D36232C0D0F680D0044E220 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1D36232B0D0F680D0044E220 /* LaunchScreen.storyboard */; };
+		1D36232E0D0F680D0044E220 /* www in Resources */ = {isa = PBXBuildFile; fileRef = 1D36232D0D0F680D0044E220 /* www */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1D3623220D0F680D0044E220 /* IronLog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IronLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1D3623250D0F680D0044E220 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		1D3623270D0F680D0044E220 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		1D3623290D0F680D0044E220 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		1D36232B0D0F680D0044E220 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		1D36232D0D0F680D0044E220 /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
+		1D36232F0D0F680D0044E220 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1D36231F0D0F680D0044E220 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1D3623190D0F680D0044E220 = {
+			isa = PBXGroup;
+			children = (
+				1D3623240D0F680D0044E220 /* IronLog */,
+				1D3623230D0F680D0044E220 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1D3623230D0F680D0044E220 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1D3623220D0F680D0044E220 /* IronLog.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1D3623240D0F680D0044E220 /* IronLog */ = {
+			isa = PBXGroup;
+			children = (
+				1D3623250D0F680D0044E220 /* AppDelegate.swift */,
+				1D3623270D0F680D0044E220 /* SceneDelegate.swift */,
+				1D3623290D0F680D0044E220 /* ViewController.swift */,
+				1D36232B0D0F680D0044E220 /* LaunchScreen.storyboard */,
+				1D36232D0D0F680D0044E220 /* www */,
+				1D36232F0D0F680D0044E220 /* Info.plist */,
+			);
+			path = IronLog;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1D3623210D0F680D0044E220 /* IronLog */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1D3623320D0F680D0044E220 /* Build configuration list for PBXNativeTarget "IronLog" */;
+			buildPhases = (
+				1D36231E0D0F680D0044E220 /* Sources */,
+				1D36231F0D0F680D0044E220 /* Frameworks */,
+				1D3623200D0F680D0044E220 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = IronLog;
+			productName = IronLog;
+			productReference = 1D3623220D0F680D0044E220 /* IronLog.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1D36231A0D0F680D0044E220 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1420;
+				LastUpgradeCheck = 1420;
+				TargetAttributes = {
+					1D3623210D0F680D0044E220 = {
+						CreatedOnToolsVersion = 14.2;
+					};
+				};
+			};
+			buildConfigurationList = 1D36231D0D0F680D0044E220 /* Build configuration list for PBXProject "IronLog" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = ru;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				ru,
+				Base,
+			);
+			mainGroup = 1D3623190D0F680D0044E220;
+			productRefGroup = 1D3623230D0F680D0044E220 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1D3623210D0F680D0044E220 /* IronLog */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1D3623200D0F680D0044E220 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1D36232C0D0F680D0044E220 /* LaunchScreen.storyboard in Resources */,
+				1D36232E0D0F680D0044E220 /* www in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1D36231E0D0F680D0044E220 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1D3623260D0F680D0044E220 /* AppDelegate.swift in Sources */,
+				1D3623280D0F680D0044E220 /* SceneDelegate.swift in Sources */,
+				1D36232A0D0F680D0044E220 /* ViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1D3623300D0F680D0044E220 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		1D3623310D0F680D0044E220 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		1D3623330D0F680D0044E220 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = IronLog/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ddx.ironlog;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1";
+			};
+			name = Debug;
+		};
+		1D3623340D0F680D0044E220 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = IronLog/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ddx.ironlog;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1D36231D0D0F680D0044E220 /* Build configuration list for PBXProject "IronLog" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1D3623300D0F680D0044E220 /* Debug */,
+				1D3623310D0F680D0044E220 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1D3623320D0F680D0044E220 /* Build configuration list for PBXNativeTarget "IronLog" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1D3623330D0F680D0044E220 /* Debug */,
+				1D3623340D0F680D0044E220 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = 1D36231A0D0F680D0044E220 /* Project object */;
+}
