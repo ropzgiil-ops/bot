@@ -1,4 +1,4 @@
-name: Build iOS IPA
+name: Build iOS Native IPA
 
 on: [push, workflow_dispatch]
 
@@ -9,11 +9,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Inject Patched Swift & Config
+      - name: Inject Clean Native Swift & Plist
         run: |
           mkdir -p IronLog
           
-          # Info.plist с правами для камеры и сети
+          # 1. Info.plist
           cat << 'PLIST_EOF' > IronLog/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -34,24 +34,11 @@ jobs:
           	<key>CFBundlePackageType</key>
           	<string>APPL</string>
           	<key>CFBundleShortVersionString</key>
-          	<string>4.0.0</string>
+          	<string>6.0.0</string>
           	<key>CFBundleVersion</key>
-          	<string>4</string>
+          	<string>6</string>
           	<key>LSRequiresIPhoneOS</key>
           	<true/>
-          	<key>NSAppTransportSecurity</key>
-          	<dict>
-          		<key>NSAllowsArbitraryLoads</key>
-          		<true/>
-          		<key>NSAllowsArbitraryLoadsInWebContent</key>
-          		<true/>
-          		<key>NSAllowsLocalNetworking</key>
-          		<true/>
-          	</dict>
-          	<key>NSCameraUsageDescription</key>
-          	<string>Камера используется для сканирования тренажеров Technogym.</string>
-          	<key>NSMicrophoneUsageDescription</key>
-          	<string>Микрофон используется для голосовой диктовки тренеру.</string>
           	<key>UILaunchScreen</key>
           	<dict/>
           	<key>UIRequiredDeviceCapabilities</key>
@@ -66,130 +53,145 @@ jobs:
           	<array>
           		<string>UIInterfaceOrientationPortrait</string>
           	</array>
-          	<key>UIViewControllerBasedStatusBarAppearance</key>
-          	<false/>
           </dict>
           </plist>
           PLIST_EOF
 
-          # ViewController.swift с гарантированной загрузкой index.html
-          cat << 'SWIFT_EOF' > IronLog/ViewController.swift
-          import UIKit
-          import WebKit
+          # 2. Native SwiftUI App Entrypoint
+          cat << 'APP_EOF' > IronLog/App.swift
+          import SwiftUI
 
-          class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate {
-              var webView: WKWebView!
-
-              override var preferredStatusBarStyle: UIStatusBarStyle {
-                  return .lightContent
+          struct WorkoutSet: Identifiable, Codable {
+              var id = UUID()
+              var weight: Double
+              var reps: Int
+              var isCompleted: Bool = false
+              
+              var oneRepMax: Double {
+                  guard reps > 0 else { return 0 }
+                  return weight * (1.0 + Double(reps) / 30.0)
               }
+          }
 
-              override func loadView() {
-                  let config = WKWebViewConfiguration()
-                  config.allowsInlineMediaPlayback = true
-                  config.mediaTypesRequiringUserActionForPlayback = []
-                  config.websiteDataStore = WKWebsiteDataStore.default()
+          struct Exercise: Identifiable, Codable {
+              var id = UUID()
+              var name: String
+              var muscleGroup: String
+              var sets: [WorkoutSet]
+          }
+
+          struct CompletedWorkout: Identifiable, Codable {
+              var id = UUID()
+              var title: String
+              var date: Date
+              var totalVolume: Double
+              var totalSets: Int
+          }
+
+          struct PersonalRecord: Identifiable, Codable {
+              var id = UUID()
+              var exerciseName: String
+              var weight: Double
+              var date: Date
+          }
+
+          struct ChatMessage: Identifiable, Codable {
+              var id = UUID()
+              var sender: String
+              var text: String
+              var time: String
+          }
+
+          class WorkoutStore: ObservableObject {
+              @Published var activeExercises: [Exercise] = []
+              @Published var isWorkoutActive: Bool = false
+              @Published var workoutTimerSeconds: Int = 0
+              @Published var restTimerSeconds: Int = 0
+              @Published var isRestTimerRunning: Bool = false
+              
+              @Published var history: [CompletedWorkout] = []
+              @Published var records: [PersonalRecord] = []
+              @Published var chatMessages: [ChatMessage] = []
+              
+              private var timer: Timer?
+              
+              init() {
+                  loadData()
+                  if chatMessages.isEmpty {
+                      chatMessages.append(ChatMessage(
+                          sender: "coach",
+                          text: "Привет, атлет! Я IronCoach. Твой сплит верхнего тела готов к работе. Задавай любой вопрос по технике, весам или питанию!",
+                          time: "Сейчас"
+                      ))
+                  }
+              }
+              
+              func startWorkout(title: String) {
+                  activeExercises = defaultExercises(for: title)
+                  isWorkoutActive = true
+                  workoutTimerSeconds = 0
+                  timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                      guard let self = self else { return }
+                      self.workoutTimerSeconds += 1
+                      if self.isRestTimerRunning && self.restTimerSeconds > 0 {
+                          self.restTimerSeconds -= 1
+                          if self.restTimerSeconds == 0 {
+                              self.isRestTimerRunning = false
+                              let generator = UINotificationFeedbackGenerator()
+                              generator.notificationOccurred(.success)
+                          }
+                      }
+                  }
+              }
+              
+              func finishWorkout() {
+                  var volume: Double = 0
+                  var completedSets = 0
                   
-                  let prefs = WKWebpagePreferences()
-                  prefs.allowsContentJavaScript = true
-                  config.defaultWebpagePreferences = prefs
-
-                  webView = WKWebView(frame: .zero, configuration: config)
-                  webView.uiDelegate = self
-                  webView.navigationDelegate = self
-                  webView.scrollView.bounces = false
-                  webView.scrollView.contentInsetAdjustmentBehavior = .never
-                  webView.isOpaque = false
-                  webView.backgroundColor = UIColor(red: 0.02, green: 0.03, blue: 0.07, alpha: 1.0)
-
-                  self.view = webView
-              }
-
-              override func viewDidLoad() {
-                  super.viewDidLoad()
-                  loadLocalApp()
-              }
-
-              func loadLocalApp() {
-                  let bundleURL = Bundle.main.bundleURL
-                  let fileManager = FileManager.default
-
-                  let candidates = [
-                      bundleURL.appendingPathComponent("index.html"),
-                      bundleURL.appendingPathComponent("www").appendingPathComponent("index.html"),
-                      Bundle.main.url(forResource: "index", withExtension: "html"),
-                      Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "www")
-                  ].compactMap { $0 }
-
-                  for fileURL in candidates {
-                      if fileManager.fileExists(atPath: fileURL.path) {
-                          webView.loadFileURL(fileURL, allowingReadAccessTo: bundleURL)
-                          return
+                  for ex in activeExercises {
+                      for set in ex.sets where set.isCompleted {
+                          volume += set.weight * Double(set.reps)
+                          completedSets += 1
+                          
+                          let current1RM = set.oneRepMax
+                          if let idx = records.firstIndex(where: { $0.exerciseName == ex.name }) {
+                              if current1RM > records[idx].weight {
+                                  records[idx].weight = current1RM
+                                  records[idx].date = Date()
+                              }
+                          } else if set.weight > 0 {
+                              records.append(PersonalRecord(exerciseName: ex.name, weight: current1RM, date: Date()))
+                          }
                       }
                   }
-
-                  for fileURL in candidates {
-                      if let htmlString = try? String(contentsOf: fileURL, encoding: .utf8) {
-                          webView.loadHTMLString(htmlString, baseURL: bundleURL)
-                          return
-                      }
-                  }
+                  
+                  let completed = CompletedWorkout(
+                      title: "Тренировка сплита",
+                      date: Date(),
+                      totalVolume: volume,
+                      totalSets: completedSets
+                  )
+                  history.insert(completed, at: 0)
+                  isWorkoutActive = false
+                  timer?.invalidate()
+                  timer = nil
+                  saveData()
               }
-          }
-          SWIFT_EOF
-
-          # AppDelegate.swift
-          cat << 'APP_EOF' > IronLog/AppDelegate.swift
-          import UIKit
-          import WebKit
-
-          @main
-          class AppDelegate: UIResponder, UIApplicationDelegate {
-              var window: UIWindow?
-
-              func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-                  let win = UIWindow(frame: UIScreen.main.bounds)
-                  win.backgroundColor = UIColor(red: 0.02, green: 0.03, blue: 0.07, alpha: 1.0)
-                  win.rootViewController = ViewController()
-                  win.makeKeyAndVisible()
-                  self.window = win
-                  return true
+              
+              func startRestTimer(seconds: Int = 90) {
+                  restTimerSeconds = seconds
+                  isRestTimerRunning = true
               }
-          }
-          APP_EOF
-
-      - name: Compile Native iOS Mach-O Binary & Create IPA
-        run: |
-          set -e
-          SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
-
-          mkdir -p Payload/IronLog.app/www
-
-          # Записываем обновленный файл во все возможные локации
-          if [ -f "index.html" ]; then
-            cp "index.html" Payload/IronLog.app/www/index.html
-            cp "index.html" Payload/IronLog.app/index.html
-          elif [ -f "IronLog/www/index.html" ]; then
-            cp "IronLog/www/index.html" Payload/IronLog.app/www/index.html
-            cp "IronLog/www/index.html" Payload/IronLog.app/index.html
-          fi
-
-          cp IronLog/Info.plist Payload/IronLog.app/Info.plist
-
-          swiftc -sdk "$SDK_PATH" \
-                 -target arm64-apple-ios14.0 \
-                 -framework UIKit \
-                 -framework WebKit \
-                 -O \
-                 IronLog/AppDelegate.swift \
-                 IronLog/ViewController.swift \
-                 -o Payload/IronLog.app/IronLog
-
-          chmod +x Payload/IronLog.app/IronLog
-          zip -r IronLog_DDX.ipa Payload
-
-      - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: IronLog_DDX_IPA
-          path: IronLog_DDX.ipa
+              
+              func addSet(to exerciseID: UUID) {
+                  guard let idx = activeExercises.firstIndex(where: { $0.id == exerciseID }) else { return }
+                  let lastWeight = activeExercises[idx].sets.last?.weight ?? 60.0
+                  let lastReps = activeExercises[idx].sets.last?.reps ?? 10
+                  activeExercises[idx].sets.append(WorkoutSet(weight: lastWeight, reps: lastReps))
+                  let impact = UIImpactFeedbackGenerator(style: .medium)
+                  impact.impactOccurred()
+              }
+              
+              func toggleSet(exerciseID: UUID, setID: UUID) {
+                  guard let exIdx = activeExercises.firstIndex(where: { $0.id == exerciseID }),
+                        let setIdx = activeExercises[exIdx].sets.firstIndex(where: {
