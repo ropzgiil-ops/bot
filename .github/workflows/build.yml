@@ -9,22 +9,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build App Archive
+      - name: Build App with Xcode
         run: |
           xcodebuild -project IronLog.xcodeproj \
-                     -scheme IronLog \
+                     -target IronLog \
                      -configuration Release \
                      -sdk iphoneos \
-                     -archivePath $PWD/build/IronLog.xcarchive \
                      CODE_SIGN_IDENTITY="" \
                      CODE_SIGNING_REQUIRED=NO \
                      CODE_SIGNING_ALLOWED=NO \
-                     archive
+                     CONFIGURATION_BUILD_DIR=$PWD/build \
+                     build
 
       - name: Package Payload and IPA
         run: |
           mkdir -p Payload
-          cp -r build/IronLog.xcarchive/Products/Applications/IronLog.app Payload/
+          cp -r build/IronLog.app Payload/
           zip -r IronLog_DDX.ipa Payload
 
       - name: Upload IPA Artifact
