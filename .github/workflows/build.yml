@@ -11,6 +11,7 @@ jobs:
 
       - name: Prepare App & Fix iOS Touch Engine
         run: |
+          set -e
           mkdir -p Payload/IronLog.app/www
 
           # 1. Info.plist
@@ -62,16 +63,21 @@ jobs:
           </plist>
           EOF
 
-          # 2. Находим index.html в репозитории
-          if [ -f "index.html" ]; then
-            cp "index.html" Payload/IronLog.app/www/index.html
-          elif [ -f "IronLog/www/index.html" ]; then
-            cp "IronLog/www/index.html" Payload/IronLog.app/www/index.html
-          elif [ -f "IronLog/index.html" ]; then
-            cp "IronLog/index.html" Payload/IronLog.app/www/index.html
+          # 2. Поиск index.html во всех возможных папках репозитория
+          HTML_FOUND=false
+          for p in "index.html" "IronLog/www/index.html" "IronLog/index.html" "www/index.html"; do
+            if [ -f "$p" ]; then
+              cp "$p" Payload/IronLog.app/www/index.html
+              HTML_FOUND=true
+              break
+            fi
+          done
+
+          if [ "$HTML_FOUND" = false ]; then
+            echo "<html><body style='background:#050d1a;color:#fff;font-family:sans-serif;padding:30px;text-align:center;'><h2>IronLog DDX</h2><p>Поместите index.html в репозиторий</p></body></html>" > Payload/IronLog.app/www/index.html
           fi
 
-          # 3. Нативный контейнер без задержки тапов и с поддержкой звука
+          # 3. Нативный контейнер UIKit
           cat << 'EOF' > main.swift
           import UIKit
           import WebKit
@@ -109,9 +115,6 @@ jobs:
 
                   if FileManager.default.fileExists(atPath: indexURL.path) {
                       webView.loadFileURL(indexURL, allowingReadAccessTo: Bundle.main.bundleURL)
-                  } else {
-                      let html = "<html><body style='background:#0b0f19;color:white;font-family:sans-serif;padding:30px;text-align:center;'><h2>Файл index.html не найден</h2></body></html>"
-                      webView.loadHTMLString(html, baseURL: nil)
                   }
               }
           }
@@ -121,4 +124,32 @@ jobs:
               var window: UIWindow?
 
               func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-                  let win = UIWindow(frame: UIScreen.main.bounds
+                  let win = UIWindow(frame: UIScreen.main.bounds)
+                  win.backgroundColor = UIColor(red: 0.03, green: 0.05, blue: 0.08, alpha: 1.0)
+                  win.rootViewController = WebViewController()
+                  win.makeKeyAndVisible()
+                  self.window = win
+                  return true
+              }
+          }
+          EOF
+
+          # 4. Компиляция и создание IPA
+          SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
+          swiftc -sdk "$SDK_PATH" \
+                 -target arm64-apple-ios14.0 \
+                 -framework UIKit \
+                 -framework WebKit \
+                 -O \
+                 main.swift \
+                 -o Payload/IronLog.app/IronLog
+
+          chmod +x Payload/IronLog.app/IronLog
+          zip -r IronLog_DDX.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: IronLog_DDX_IPA
+          path: IronLog_DDX.ipa
+          if-no-files-found: error
