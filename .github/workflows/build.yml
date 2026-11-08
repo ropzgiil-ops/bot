@@ -13,7 +13,7 @@ jobs:
         run: |
           mkdir -p IronLog
           
-          # 1. Update Info.plist with App Transport Security & Version 3.0.0
+          # Info.plist с правами для камеры и сети
           cat << 'PLIST_EOF' > IronLog/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -34,9 +34,9 @@ jobs:
           	<key>CFBundlePackageType</key>
           	<string>APPL</string>
           	<key>CFBundleShortVersionString</key>
-          	<string>3.0.0</string>
+          	<string>4.0.0</string>
           	<key>CFBundleVersion</key>
-          	<string>3</string>
+          	<string>4</string>
           	<key>LSRequiresIPhoneOS</key>
           	<true/>
           	<key>NSAppTransportSecurity</key>
@@ -49,9 +49,9 @@ jobs:
           		<true/>
           	</dict>
           	<key>NSCameraUsageDescription</key>
-          	<string>Камера используется для сканирования и анализа тренажеров Technogym.</string>
+          	<string>Камера используется для сканирования тренажеров Technogym.</string>
           	<key>NSMicrophoneUsageDescription</key>
-          	<string>Микрофон используется для голосовой диктовки тренеру IronCoach.</string>
+          	<string>Микрофон используется для голосовой диктовки тренеру.</string>
           	<key>UILaunchScreen</key>
           	<dict/>
           	<key>UIRequiredDeviceCapabilities</key>
@@ -72,7 +72,7 @@ jobs:
           </plist>
           PLIST_EOF
 
-          # 2. Update ViewController.swift with cache-busting loader
+          # ViewController.swift с гарантированной загрузкой index.html
           cat << 'SWIFT_EOF' > IronLog/ViewController.swift
           import UIKit
           import WebKit
@@ -134,23 +134,12 @@ jobs:
                           return
                       }
                   }
-
-                  let contents = (try? fileManager.contentsOfDirectory(atPath: bundleURL.path)) ?? []
-                  let errHtml = """
-                  <html><body style="background:#050811;color:#fff;font-family:sans-serif;padding:30px;text-align:center;">
-                  <h2 style="color:#06b6d4;">IronLog DDX</h2>
-                  <p>Инициализация приложения...</p>
-                  <p style="font-size:11px;color:#888;">Файлы: \(contents.joined(separator: ", "))</p>
-                  </body></html>
-                  """
-                  webView.loadHTMLString(errHtml, baseURL: bundleURL)
               }
           }
           SWIFT_EOF
 
-          # 3. Ensure AppDelegate.swift exists
-          if [ ! -f "IronLog/AppDelegate.swift" ]; then
-            cat << 'APP_EOF' > IronLog/AppDelegate.swift
+          # AppDelegate.swift
+          cat << 'APP_EOF' > IronLog/AppDelegate.swift
           import UIKit
           import WebKit
 
@@ -168,31 +157,25 @@ jobs:
               }
           }
           APP_EOF
-          fi
 
       - name: Compile Native iOS Mach-O Binary & Create IPA
         run: |
           set -e
-          echo "=== 1. Getting iPhoneOS SDK ==="
           SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
 
-          echo "=== 2. Preparing Payload directory ==="
           mkdir -p Payload/IronLog.app/www
 
-          # Берем новый загруженный index.html из корня репозитория
+          # Записываем обновленный файл во все возможные локации
           if [ -f "index.html" ]; then
-            echo ">>> Используем новый index.html из корня репозитория <<<"
             cp "index.html" Payload/IronLog.app/www/index.html
             cp "index.html" Payload/IronLog.app/index.html
           elif [ -f "IronLog/www/index.html" ]; then
-            echo ">>> Используем IronLog/www/index.html <<<"
             cp "IronLog/www/index.html" Payload/IronLog.app/www/index.html
             cp "IronLog/www/index.html" Payload/IronLog.app/index.html
           fi
 
           cp IronLog/Info.plist Payload/IronLog.app/Info.plist
 
-          echo "=== 3. Compiling Swift to real Apple arm64 Mach-O binary ==="
           swiftc -sdk "$SDK_PATH" \
                  -target arm64-apple-ios14.0 \
                  -framework UIKit \
@@ -203,8 +186,6 @@ jobs:
                  -o Payload/IronLog.app/IronLog
 
           chmod +x Payload/IronLog.app/IronLog
-
-          echo "=== 4. Packaging into IPA ==="
           zip -r IronLog_DDX.ipa Payload
 
       - name: Upload IPA Artifact
