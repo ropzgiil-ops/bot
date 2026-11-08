@@ -32,6 +32,23 @@
     }
   </script>
   <style>
+    /* Разблокировка нажатий для iOS Safari / WebKit */
+* {
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+}
+
+button, a, input, select, textarea, [role="button"] {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10;
+}
+
+.modal-backdrop.hidden, .hidden {
+    display: none !important;
+    pointer-events: none !important;
+}
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
     
     :root {
