@@ -12,27 +12,22 @@ jobs:
       - name: Compile Native iOS Mach-O Binary & Create IPA
         run: |
           set -e
-          echo "=== 1. Getting iPhoneOS SDK ==="
           SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
 
-          echo "=== 2. Preparing Payload directory ==="
           mkdir -p Payload/IronLog.app/www
           cp -r IronLog/www/* Payload/IronLog.app/www/
+          cp IronLog/www/index.html Payload/IronLog.app/index.html
           cp IronLog/Info.plist Payload/IronLog.app/
 
-          echo "=== 3. Compiling Swift to real Apple arm64 Mach-O binary ==="
           swiftc -sdk "$SDK_PATH" \
                  -target arm64-apple-ios14.0 \
                  -framework UIKit \
                  -framework WebKit \
                  IronLog/AppDelegate.swift \
-                 IronLog/SceneDelegate.swift \
                  IronLog/ViewController.swift \
                  -o Payload/IronLog.app/IronLog
 
           chmod +x Payload/IronLog.app/IronLog
-
-          echo "=== 4. Packaging into IPA ==="
           zip -r IronLog_DDX.ipa Payload
 
       - name: Upload IPA Artifact
