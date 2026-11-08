@@ -9,25 +9,202 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Inject Patched Swift & Config
+        run: |
+          mkdir -p IronLog
+          
+          # 1. Update Info.plist with App Transport Security
+          cat << 'PLIST_EOF' > IronLog/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+          	<key>CFBundleDevelopmentRegion</key>
+          	<string>ru</string>
+          	<key>CFBundleDisplayName</key>
+          	<string>IronLog DDX</string>
+          	<key>CFBundleExecutable</key>
+          	<string>IronLog</string>
+          	<key>CFBundleIdentifier</key>
+          	<string>com.ddx.ironlog</string>
+          	<key>CFBundleInfoDictionaryVersion</key>
+          	<string>6.0</string>
+          	<key>CFBundleName</key>
+          	<string>IronLog</string>
+          	<key>CFBundlePackageType</key>
+          	<string>APPL</string>
+          	<key>CFBundleShortVersionString</key>
+          	<string>2.0.0</string>
+          	<key>CFBundleVersion</key>
+          	<string>2</string>
+          	<key>LSRequiresIPhoneOS</key>
+          	<true/>
+          	<key>NSAppTransportSecurity</key>
+          	<dict>
+          		<key>NSAllowsArbitraryLoads</key>
+          		<true/>
+          		<key>NSAllowsArbitraryLoadsInWebContent</key>
+          		<true/>
+          		<key>NSAllowsLocalNetworking</key>
+          		<true/>
+          	</dict>
+          	<key>NSCameraUsageDescription</key>
+          	<string>Камера используется для сканирования и анализа тренажеров Technogym.</string>
+          	<key>NSMicrophoneUsageDescription</key>
+          	<string>Микрофон используется для голосовой диктовки тренеру IronCoach.</string>
+          	<key>UILaunchScreen</key>
+          	<dict/>
+          	<key>UIRequiredDeviceCapabilities</key>
+          	<array>
+          		<string>arm64</string>
+          	</array>
+          	<key>UIRequiresFullScreen</key>
+          	<true/>
+          	<key>UIStatusBarStyle</key>
+          	<string>UIStatusBarStyleLightContent</string>
+          	<key>UISupportedInterfaceOrientations</key>
+          	<array>
+          		<string>UIInterfaceOrientationPortrait</string>
+          	</array>
+          	<key>UIViewControllerBasedStatusBarAppearance</key>
+          	<false/>
+          </dict>
+          </plist>
+          PLIST_EOF
+
+          # 2. Update ViewController.swift with fail-proof HTML loader
+          cat << 'SWIFT_EOF' > IronLog/ViewController.swift
+          import UIKit
+          import WebKit
+
+          class ViewController: UIViewController, WKUIDelegate, WKNavigationDelegate {
+              var webView: WKWebView!
+
+              override var preferredStatusBarStyle: UIStatusBarStyle {
+                  return .lightContent
+              }
+
+              override func loadView() {
+                  let config = WKWebViewConfiguration()
+                  config.allowsInlineMediaPlayback = true
+                  config.mediaTypesRequiringUserActionForPlayback = []
+                  config.websiteDataStore = WKWebsiteDataStore.default()
+                  
+                  let prefs = WKWebpagePreferences()
+                  prefs.allowsContentJavaScript = true
+                  config.defaultWebpagePreferences = prefs
+
+                  webView = WKWebView(frame: .zero, configuration: config)
+                  webView.uiDelegate = self
+                  webView.navigationDelegate = self
+                  webView.scrollView.bounces = false
+                  webView.scrollView.contentInsetAdjustmentBehavior = .never
+                  webView.isOpaque = false
+                  webView.backgroundColor = UIColor(red: 0.02, green: 0.03, blue: 0.07, alpha: 1.0)
+
+                  self.view = webView
+              }
+
+              override func viewDidLoad() {
+                  super.viewDidLoad()
+                  loadLocalApp()
+              }
+
+              func loadLocalApp() {
+                  let bundleURL = Bundle.main.bundleURL
+                  let fileManager = FileManager.default
+
+                  let candidates = [
+                      bundleURL.appendingPathComponent("www").appendingPathComponent("index.html"),
+                      bundleURL.appendingPathComponent("index.html"),
+                      Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "www"),
+                      Bundle.main.url(forResource: "index", withExtension: "html")
+                  ].compactMap { $0 }
+
+                  for fileURL in candidates {
+                      if fileManager.fileExists(atPath: fileURL.path) {
+                          webView.loadFileURL(fileURL, allowingReadAccessTo: bundleURL)
+                          return
+                      }
+                  }
+
+                  for fileURL in candidates {
+                      if let htmlString = try? String(contentsOf: fileURL, encoding: .utf8) {
+                          webView.loadHTMLString(htmlString, baseURL: bundleURL)
+                          return
+                      }
+                  }
+
+                  let contents = (try? fileManager.contentsOfDirectory(atPath: bundleURL.path)) ?? []
+                  let errHtml = """
+                  <html><body style="background:#050811;color:#fff;font-family:sans-serif;padding:30px;text-align:center;">
+                  <h2 style="color:#06b6d4;">IronLog DDX</h2>
+                  <p>Инициализация приложения...</p>
+                  <p style="font-size:11px;color:#888;">Файлы: \\(contents.joined(separator: ", "))</p>
+                  </body></html>
+                  """
+                  webView.loadHTMLString(errHtml, baseURL: bundleURL)
+              }
+          }
+          SWIFT_EOF
+
+          # 3. Ensure AppDelegate.swift exists
+          if [ ! -f "IronLog/AppDelegate.swift" ]; then
+            cat << 'APP_EOF' > IronLog/AppDelegate.swift
+          import UIKit
+          import WebKit
+
+          @main
+          class AppDelegate: UIResponder, UIApplicationDelegate {
+              var window: UIWindow?
+
+              func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+                  let win = UIWindow(frame: UIScreen.main.bounds)
+                  win.backgroundColor = UIColor(red: 0.02, green: 0.03, blue: 0.07, alpha: 1.0)
+                  win.rootViewController = ViewController()
+                  win.makeKeyAndVisible()
+                  self.window = win
+                  return true
+              }
+          }
+          APP_EOF
+          fi
+
       - name: Compile Native iOS Mach-O Binary & Create IPA
         run: |
           set -e
+          echo "=== 1. Getting iPhoneOS SDK ==="
           SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
 
+          echo "=== 2. Preparing Payload directory ==="
           mkdir -p Payload/IronLog.app/www
-          cp -r IronLog/www/* Payload/IronLog.app/www/
-          cp IronLog/www/index.html Payload/IronLog.app/index.html
-          cp IronLog/Info.plist Payload/IronLog.app/
 
+          if [ -f "IronLog/www/index.html" ]; then
+            cp "IronLog/www/index.html" Payload/IronLog.app/www/index.html
+            cp "IronLog/www/index.html" Payload/IronLog.app/index.html
+          elif [ -f "www/index.html" ]; then
+            cp "www/index.html" Payload/IronLog.app/www/index.html
+            cp "www/index.html" Payload/IronLog.app/index.html
+          elif [ -f "index.html" ]; then
+            cp "index.html" Payload/IronLog.app/www/index.html
+            cp "index.html" Payload/IronLog.app/index.html
+          fi
+
+          cp IronLog/Info.plist Payload/IronLog.app/Info.plist
+
+          echo "=== 3. Compiling Swift to real Apple arm64 Mach-O binary ==="
           swiftc -sdk "$SDK_PATH" \
                  -target arm64-apple-ios14.0 \
                  -framework UIKit \
                  -framework WebKit \
+                 -O \
                  IronLog/AppDelegate.swift \
                  IronLog/ViewController.swift \
                  -o Payload/IronLog.app/IronLog
 
           chmod +x Payload/IronLog.app/IronLog
+
+          echo "=== 4. Packaging into IPA ==="
           zip -r IronLog_DDX.ipa Payload
 
       - name: Upload IPA Artifact
