@@ -9,17 +9,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Web Content & Permissions
+      - name: Prepare Assets
         run: |
           set -e
-          # Создаем директории и копируем index.html
-          mkdir -p IronLog/www
-          if [ -f "index.html" ]; then
-            cp "index.html" IronLog/www/index.html
-          fi
+          mkdir -p Payload/IronLog.app/www
 
-          # Обновляем Info.plist с правами для iOS
-          cat << 'PLIST_EOF' > IronLog/Info.plist
+          # 1. Записываем валидный Info.plist
+          cat << 'PLIST_EOF' > Payload/IronLog.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -39,9 +35,9 @@ jobs:
           	<key>CFBundlePackageType</key>
           	<string>APPL</string>
           	<key>CFBundleShortVersionString</key>
-          	<string>4.0.0</string>
+          	<string>5.0.0</string>
           	<key>CFBundleVersion</key>
-          	<string>4</string>
+          	<string>5</string>
           	<key>LSRequiresIPhoneOS</key>
           	<true/>
           	<key>NSAppTransportSecurity</key>
@@ -49,8 +45,6 @@ jobs:
           		<key>NSAllowsArbitraryLoads</key>
           		<true/>
           	</dict>
-          	<key>NSCameraUsageDescription</key>
-          	<string>Камера для сканирования инвентаря</string>
           	<key>UILaunchScreen</key>
           	<dict/>
           	<key>UIRequiredDeviceCapabilities</key>
@@ -69,17 +63,20 @@ jobs:
           </plist>
           PLIST_EOF
 
-      - name: Build IPA via Xcode / SDK
+          # 2. Копируем index.html
+          if [ -f "index.html" ]; then
+            cp "index.html" Payload/IronLog.app/www/index.html
+            cp "index.html" Payload/IronLog.app/index.html
+          elif [ -f "IronLog/www/index.html" ]; then
+            cp "IronLog/www/index.html" Payload/IronLog.app/www/index.html
+            cp "IronLog/www/index.html" Payload/IronLog.app/index.html
+          fi
+
+      - name: Compile Native Binary & Pack IPA
         run: |
           set -e
           SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
-          mkdir -p Payload/IronLog.app/www
 
-          cp IronLog/www/index.html Payload/IronLog.app/www/index.html
-          cp IronLog/www/index.html Payload/IronLog.app/index.html
-          cp IronLog/Info.plist Payload/IronLog.app/Info.plist
-
-          # Компиляция всех Swift файлов проекта с полной поддержкой WebKit и UIKit
           swiftc -sdk "$SDK_PATH" \
                  -target arm64-apple-ios14.0 \
                  -framework UIKit \
@@ -92,7 +89,7 @@ jobs:
           chmod +x Payload/IronLog.app/IronLog
           zip -r IronLog_DDX.ipa Payload
 
-      - name: Upload IPA Artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: IronLog_DDX_IPA
