@@ -9,13 +9,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare App & Fix iOS Touch Engine
+      - name: Setup Web Content & Permissions
         run: |
           set -e
-          mkdir -p Payload/IronLog.app/www
+          # Создаем директории и копируем index.html
+          mkdir -p IronLog/www
+          if [ -f "index.html" ]; then
+            cp "index.html" IronLog/www/index.html
+          fi
 
-          # 1. Info.plist
-          cat << 'EOF' > Payload/IronLog.app/Info.plist
+          # Обновляем Info.plist с правами для iOS
+          cat << 'PLIST_EOF' > IronLog/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -45,6 +49,8 @@ jobs:
           		<key>NSAllowsArbitraryLoads</key>
           		<true/>
           	</dict>
+          	<key>NSCameraUsageDescription</key>
+          	<string>Камера для сканирования инвентаря</string>
           	<key>UILaunchScreen</key>
           	<dict/>
           	<key>UIRequiredDeviceCapabilities</key>
@@ -61,87 +67,26 @@ jobs:
           	</array>
           </dict>
           </plist>
-          EOF
+          PLIST_EOF
 
-          # 2. Поиск index.html во всех возможных папках репозитория
-          HTML_FOUND=false
-          for p in "index.html" "IronLog/www/index.html" "IronLog/index.html" "www/index.html"; do
-            if [ -f "$p" ]; then
-              cp "$p" Payload/IronLog.app/www/index.html
-              HTML_FOUND=true
-              break
-            fi
-          done
-
-          if [ "$HTML_FOUND" = false ]; then
-            echo "<html><body style='background:#050d1a;color:#fff;font-family:sans-serif;padding:30px;text-align:center;'><h2>IronLog DDX</h2><p>Поместите index.html в репозиторий</p></body></html>" > Payload/IronLog.app/www/index.html
-          fi
-
-          # 3. Нативный контейнер UIKit
-          cat << 'EOF' > main.swift
-          import UIKit
-          import WebKit
-
-          class WebViewController: UIViewController, WKNavigationDelegate, WKUIDelegate {
-              var webView: WKWebView!
-
-              override var preferredStatusBarStyle: UIStatusBarStyle {
-                  return .lightContent
-              }
-
-              override func viewDidLoad() {
-                  super.viewDidLoad()
-                  view.backgroundColor = UIColor(red: 0.03, green: 0.05, blue: 0.08, alpha: 1.0)
-
-                  let config = WKWebViewConfiguration()
-                  config.allowsInlineMediaPlayback = true
-                  config.mediaTypesRequiringUserActionForPlayback = []
-                  
-                  let script = WKUserScript(source: "document.documentElement.style.webkitTouchCallout='none'; document.documentElement.style.webkitUserSelect='none';", injectionTime: .atDocumentEnd, forMainFrameOnly: true)
-                  config.userContentController.addUserScript(script)
-
-                  webView = WKWebView(frame: view.bounds, configuration: config)
-                  webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-                  webView.navigationDelegate = self
-                  webView.uiDelegate = self
-                  webView.isOpaque = false
-                  webView.backgroundColor = .clear
-                  webView.scrollView.bounces = false
-                  webView.scrollView.contentInsetAdjustmentBehavior = .never
-                  view.addSubview(webView)
-
-                  let wwwURL = Bundle.main.bundleURL.appendingPathComponent("www")
-                  let indexURL = wwwURL.appendingPathComponent("index.html")
-
-                  if FileManager.default.fileExists(atPath: indexURL.path) {
-                      webView.loadFileURL(indexURL, allowingReadAccessTo: Bundle.main.bundleURL)
-                  }
-              }
-          }
-
-          @UIApplicationMain
-          class AppDelegate: UIResponder, UIApplicationDelegate {
-              var window: UIWindow?
-
-              func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-                  let win = UIWindow(frame: UIScreen.main.bounds)
-                  win.backgroundColor = UIColor(red: 0.03, green: 0.05, blue: 0.08, alpha: 1.0)
-                  win.rootViewController = WebViewController()
-                  win.makeKeyAndVisible()
-                  self.window = win
-                  return true
-              }
-          }
-          EOF
-
-          # 4. Компиляция и создание IPA
+      - name: Build IPA via Xcode / SDK
+        run: |
+          set -e
           SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
+          mkdir -p Payload/IronLog.app/www
+
+          cp IronLog/www/index.html Payload/IronLog.app/www/index.html
+          cp IronLog/www/index.html Payload/IronLog.app/index.html
+          cp IronLog/Info.plist Payload/IronLog.app/Info.plist
+
+          # Компиляция всех Swift файлов проекта с полной поддержкой WebKit и UIKit
           swiftc -sdk "$SDK_PATH" \
                  -target arm64-apple-ios14.0 \
                  -framework UIKit \
                  -framework WebKit \
                  -O \
-                 main.swift \
+                 IronLog/AppDelegate.swift \
+                 IronLog/ViewController.swift \
                  -o Payload/IronLog.app/IronLog
 
           chmod +x Payload/IronLog.app/IronLog
@@ -152,4 +97,3 @@ jobs:
         with:
           name: IronLog_DDX_IPA
           path: IronLog_DDX.ipa
-          if-no-files-found: error
